@@ -8,7 +8,8 @@
         "port": 587,
         "utilisateur": "monitor@example.com",
         "mot_de_passe": "secret",
-        "encryption": "tls"
+        "encryption": "tls",
+        "expediteur": "monitor@example.com"
     },
     "clients": [
         {

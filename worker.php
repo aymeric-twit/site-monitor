@@ -25,6 +25,7 @@ use SiteMonitor\Entite\Execution;
 use SiteMonitor\Moteur\ClientHttp;
 use SiteMonitor\Moteur\MoteurVerification;
 use SiteMonitor\Moteur\RegistreVerificateurs;
+use SiteMonitor\Moteur\ExpeditionAlertes;
 use SiteMonitor\Moteur\GenerateurAlertes;
 use SiteMonitor\Stockage\DepotAlerte;
 use SiteMonitor\Stockage\DepotClient;
@@ -181,6 +182,13 @@ if (isset($options['job'])) {
             depotUrl: $depotUrl,
         );
         $generateurAlertes->generer($executionId);
+
+        // Envoyer les alertes par email
+        $expeditionAlertes = new ExpeditionAlertes(depotAlerte: $depotAlerte);
+        $nbEnvoyees = $expeditionAlertes->expedierEnAttente();
+        if ($nbEnvoyees > 0) {
+            logWorker("{$nbEnvoyees} alerte(s) envoyee(s) par email.", quiet: $quiet);
+        }
 
         // Recuperer les stats finales
         $execution = $depotExecution->trouverParId($executionId);

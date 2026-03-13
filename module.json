@@ -9,7 +9,7 @@
     "quota_mode": "api_call",
     "default_quota": 5000,
     "display_mode": "embedded",
-    "env_keys": ["SITE_MONITOR_SMTP_HOST", "SITE_MONITOR_SMTP_USER", "SITE_MONITOR_SMTP_PASS"],
+    "env_keys": [],
     "languages": ["fr", "en"],
     "routes": [
         {"path": "api.php", "method": "POST", "type": "ajax"},
