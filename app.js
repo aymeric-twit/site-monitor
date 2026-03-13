@@ -2260,3 +2260,15 @@ function renderDetailsJson(detailsJson) {
         <div class="details-contenu" id="${id}" style="display:none;">${echapper(JSON.stringify(detailsFiltres, null, 2))}</div>
     `;
 }
+
+// --- Help panel collapse ---
+(function () {
+    var panel = document.querySelector('.config-help-panel');
+    var btn = panel ? panel.querySelector('.help-toggle-btn') : null;
+    if (panel && btn) {
+        btn.addEventListener('click', function () {
+            panel.classList.toggle('expanded');
+            btn.textContent = panel.classList.contains('expanded') ? '▲ Réduire' : '▼ Voir plus';
+        });
+    }
+})();

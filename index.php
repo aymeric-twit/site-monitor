@@ -49,6 +49,35 @@
     </div>
 
     <!-- ================================================================== -->
+    <!-- Panneau d'aide                                                     -->
+    <!-- ================================================================== -->
+    <div class="row mb-4">
+        <div class="col-lg-8">
+        </div>
+        <div class="col-lg-4" id="helpPanel">
+            <div class="config-help-panel">
+                <div class="help-title mb-2">
+                    <i class="bi bi-info-circle me-1"></i> Comment ça marche
+                </div>
+                <ul>
+                    <li><strong>Modèle</strong> : créez un modèle de monitoring avec des règles (title, meta, statuts HTTP, contenu).</li>
+                    <li><strong>Planification</strong> : planifiez des exécutions pour détecter les régressions SEO.</li>
+                    <li><strong>Dashboard</strong> : KPIs de santé, historique des vérifications, alertes.</li>
+                    <li><strong>Alertes</strong> : notifications automatiques en cas de régression détectée.</li>
+                </ul>
+                <hr>
+                <div class="help-title mb-2">
+                    <i class="bi bi-speedometer2 me-1"></i> Quota
+                </div>
+                <ul class="mb-0">
+                    <li>1 vérification d'URL = <strong>1 crédit</strong></li>
+                </ul>
+                <span class="help-toggle-btn">▼ Voir plus</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================================================================== -->
     <!-- Onglets principaux                                                 -->
     <!-- ================================================================== -->
     <ul class="nav nav-tabs mb-4" id="tabsPrincipaux" role="tablist">
