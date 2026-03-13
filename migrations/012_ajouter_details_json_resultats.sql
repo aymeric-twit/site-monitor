@@ -1,0 +1,1 @@
+ALTER TABLE sm_resultats ADD COLUMN details_json LONGTEXT DEFAULT NULL;

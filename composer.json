@@ -1,0 +1,23 @@
+{
+    "name": "seo-platform/site-monitor",
+    "description": "Module de monitoring de non-regression et sante SEO",
+    "type": "library",
+    "license": "proprietary",
+    "autoload": {
+        "psr-4": {
+            "SiteMonitor\\": "src/"
+        }
+    },
+    "require": {
+        "php": ">=8.3",
+        "guzzlehttp/guzzle": "^7.0"
+    },
+    "require-dev": {
+        "pestphp/pest": "^3.0"
+    },
+    "config": {
+        "allow-plugins": {
+            "pestphp/pest-plugin": true
+        }
+    }
+}

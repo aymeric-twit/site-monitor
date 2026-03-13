@@ -1,0 +1,25 @@
+{
+    "slug": "site-monitor",
+    "name": "Site Monitor",
+    "description": "Monitoring de non-regression et verification de sante SEO des sites web",
+    "version": "1.0.0",
+    "icon": "bi-shield-check",
+    "entry_point": "index.php",
+    "sort_order": 15,
+    "quota_mode": "api_call",
+    "default_quota": 5000,
+    "display_mode": "embedded",
+    "env_keys": ["SITE_MONITOR_SMTP_HOST", "SITE_MONITOR_SMTP_USER", "SITE_MONITOR_SMTP_PASS"],
+    "languages": ["fr", "en"],
+    "routes": [
+        {"path": "api.php", "method": "POST", "type": "ajax"},
+        {"path": "api.php", "method": "GET", "type": "ajax"},
+        {"path": "progress.php", "method": "GET", "type": "ajax"},
+        {"path": "results.php", "method": "GET", "type": "page"},
+        {"path": "installer.php", "method": "POST", "type": "ajax"},
+        {"path": "download.php", "method": "GET", "type": "ajax"},
+        {"path": "regles.php", "method": "GET", "type": "page"},
+        {"path": "worker-indexation.php", "method": "POST", "type": "ajax"},
+        {"path": "download-indexation.php", "method": "GET", "type": "ajax"}
+    ]
+}

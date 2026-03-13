@@ -1,0 +1,215 @@
+{
+    "base_de_donnees": {
+        "type": "sqlite",
+        "chemin": "data/site-monitor.sqlite"
+    },
+    "smtp": {
+        "hote": "smtp.example.com",
+        "port": 587,
+        "utilisateur": "monitor@example.com",
+        "mot_de_passe": "secret",
+        "encryption": "tls"
+    },
+    "clients": [
+        {
+            "nom": "Acme Corp",
+            "slug": "acme-corp",
+            "domaine": "acme.com",
+            "email_contact": "seo@acme.com",
+            "groupes": [
+                {
+                    "nom": "Pages principales",
+                    "urls": [
+                        {
+                            "url": "https://acme.com/",
+                            "libelle": "Homepage"
+                        },
+                        {
+                            "url": "https://acme.com/contact",
+                            "libelle": "Page contact"
+                        }
+                    ],
+                    "planification": {
+                        "frequence_minutes": 60,
+                        "timeout_secondes": 30,
+                        "delai_entre_requetes_ms": 1000,
+                        "user_agent": "SiteMonitor/1.0"
+                    }
+                },
+                {
+                    "nom": "Pages produit",
+                    "urls": [
+                        {
+                            "url": "https://acme.com/produit/widget-pro",
+                            "libelle": "Widget Pro"
+                        },
+                        {
+                            "url": "https://acme.com/produit/mega-gadget",
+                            "libelle": "Mega Gadget"
+                        }
+                    ]
+                }
+            ],
+            "modeles": [
+                {
+                    "nom": "Template SEO Standard",
+                    "description": "Verifications SEO de base pour toutes les pages",
+                    "regles": [
+                        {
+                            "type_regle": "code_http",
+                            "nom": "Code HTTP 200",
+                            "severite": "critique",
+                            "configuration": {
+                                "code_attendu": 200
+                            }
+                        },
+                        {
+                            "type_regle": "performance",
+                            "nom": "TTFB < 800ms",
+                            "severite": "avertissement",
+                            "configuration": {
+                                "metrique": "ttfb",
+                                "seuil_max": 800,
+                                "unite": "ms"
+                            }
+                        },
+                        {
+                            "type_regle": "performance",
+                            "nom": "Temps total < 3s",
+                            "severite": "erreur",
+                            "configuration": {
+                                "metrique": "temps_total",
+                                "seuil_max": 3000,
+                                "unite": "ms"
+                            }
+                        },
+                        {
+                            "type_regle": "meta_seo",
+                            "nom": "Title present (30-60 car.)",
+                            "severite": "erreur",
+                            "configuration": {
+                                "verification": "title",
+                                "verifier_presence": true,
+                                "longueur_min": 30,
+                                "longueur_max": 60
+                            }
+                        },
+                        {
+                            "type_regle": "meta_seo",
+                            "nom": "Meta description (120-160 car.)",
+                            "severite": "erreur",
+                            "configuration": {
+                                "verification": "meta_description",
+                                "verifier_presence": true,
+                                "longueur_min": 120,
+                                "longueur_max": 160
+                            }
+                        },
+                        {
+                            "type_regle": "meta_seo",
+                            "nom": "Canonical presente",
+                            "severite": "erreur",
+                            "configuration": {
+                                "verification": "canonical",
+                                "verifier_presence": true
+                            }
+                        },
+                        {
+                            "type_regle": "structure_titres",
+                            "nom": "H1 unique",
+                            "severite": "erreur",
+                            "configuration": {
+                                "verification": "h1_unique"
+                            }
+                        },
+                        {
+                            "type_regle": "structure_titres",
+                            "nom": "Hierarchie Hn correcte",
+                            "severite": "avertissement",
+                            "configuration": {
+                                "verification": "hierarchie"
+                            }
+                        },
+                        {
+                            "type_regle": "images_seo",
+                            "nom": "Images avec alt",
+                            "severite": "avertissement",
+                            "configuration": {
+                                "verification": "alt_manquant"
+                            }
+                        },
+                        {
+                            "type_regle": "images_seo",
+                            "nom": "Images avec dimensions",
+                            "severite": "avertissement",
+                            "configuration": {
+                                "verification": "dimensions_manquantes"
+                            }
+                        },
+                        {
+                            "type_regle": "en_tete_http",
+                            "nom": "X-Content-Type-Options",
+                            "severite": "avertissement",
+                            "configuration": {
+                                "nom_entete": "X-Content-Type-Options",
+                                "operation": "egal",
+                                "valeur_attendue": "nosniff"
+                            }
+                        },
+                        {
+                            "type_regle": "ssl",
+                            "nom": "Certificat SSL valide",
+                            "severite": "critique",
+                            "configuration": {
+                                "verification": "validite"
+                            }
+                        },
+                        {
+                            "type_regle": "ssl",
+                            "nom": "SSL expire dans +30j",
+                            "severite": "erreur",
+                            "configuration": {
+                                "verification": "expiration",
+                                "jours_avant_expiration": 30
+                            }
+                        }
+                    ]
+                },
+                {
+                    "nom": "Template E-commerce",
+                    "description": "Verifications specifiques pages produit",
+                    "regles": [
+                        {
+                            "type_regle": "donnees_structurees",
+                            "nom": "Schema Product present",
+                            "severite": "erreur",
+                            "configuration": {
+                                "verification": "type_schema",
+                                "type_attendu": "Product"
+                            }
+                        },
+                        {
+                            "type_regle": "open_graph",
+                            "nom": "OG complet",
+                            "severite": "avertissement",
+                            "configuration": {
+                                "verification": "og_complet"
+                            }
+                        },
+                        {
+                            "type_regle": "comptage_occurrences",
+                            "nom": "Bouton ajout panier present",
+                            "severite": "erreur",
+                            "configuration": {
+                                "type_recherche": "xpath",
+                                "motif": "//button[contains(@class, 'add-to-cart') or contains(@class, 'btn-panier')]",
+                                "operateur": "superieur",
+                                "valeur_attendue": 0
+                            }
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}
