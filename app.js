@@ -1287,6 +1287,7 @@ async function chargerGroupesVerification(clientId) {
 
 async function lancerVerification(e) {
     e.preventDefault();
+    collapserHelpPanel();
 
     const clientId = document.getElementById('verifClientId').value;
     if (!clientId) {
@@ -2262,13 +2263,7 @@ function renderDetailsJson(detailsJson) {
 }
 
 // --- Help panel collapse ---
-(function () {
-    var panel = document.querySelector('.config-help-panel');
-    var btn = panel ? panel.querySelector('.help-toggle-btn') : null;
-    if (panel && btn) {
-        btn.addEventListener('click', function () {
-            panel.classList.toggle('expanded');
-            btn.textContent = panel.classList.contains('expanded') ? '▲ Réduire' : '▼ Voir plus';
-        });
-    }
-})();
+function collapserHelpPanel() {
+    var panel = document.getElementById('helpPanel');
+    if (panel) panel.classList.add('help-hidden');
+}
