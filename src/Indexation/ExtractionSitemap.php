@@ -249,6 +249,41 @@ class ExtractionSitemap
             return null;
         }
 
+        // Mode plateforme : utiliser le WebClient centralise
+        if (defined('PLATFORM_EMBEDDED') && class_exists(\Platform\Http\WebClient::class)) {
+            return $this->telechargerUrlViaPlateforme($url);
+        }
+
+        return $this->telechargerUrlViaStandalone($url);
+    }
+
+    /**
+     * Telechargement via le WebClient centralise de la plateforme.
+     */
+    private function telechargerUrlViaPlateforme(string $url): ?string
+    {
+        try {
+            $webClient = new \Platform\Http\WebClient('site-monitor');
+            $reponse = $webClient->fetchFichier($url);
+
+            if ($reponse->statusCode >= 200 && $reponse->statusCode < 300) {
+                return $reponse->body;
+            }
+
+            $this->erreurs[] = "Echec telechargement (HTTP {$reponse->statusCode}) : $url";
+            return null;
+        } catch (\Throwable $e) {
+            $this->erreurs[] = "Erreur plateforme : {$e->getMessage()} — $url";
+            // Fallback vers le mode standalone
+            return $this->telechargerUrlViaStandalone($url);
+        }
+    }
+
+    /**
+     * Telechargement standalone via file_get_contents (mode autonome).
+     */
+    private function telechargerUrlViaStandalone(string $url): ?string
+    {
         $codeHttp = 0;
 
         for ($tentative = 1; $tentative <= $this->tentatives; $tentative++) {

@@ -58,6 +58,68 @@ final class ClientHttp
      */
     public function recuperer(string $url): ContexteVerification
     {
+        // Mode plateforme : utiliser le WebClient centralise
+        if (defined('PLATFORM_EMBEDDED') && class_exists(\Platform\Http\WebClient::class)) {
+            return $this->recupererViaPlateforme($url);
+        }
+
+        return $this->recupererViaStandalone($url);
+    }
+
+    /**
+     * Recuperation via le WebClient centralise de la plateforme.
+     */
+    private function recupererViaPlateforme(string $url): ContexteVerification
+    {
+        try {
+            $webClient = new \Platform\Http\WebClient('site-monitor');
+            $reponse = $webClient->fetch($url);
+
+            $timings = $reponse->timings ?? [];
+
+            // Recuperer les infos SSL via cURL natif (WebClient ne les expose pas)
+            $infosSsl = $this->extraireInfosSslDepuisUrl($url);
+
+            return new ContexteVerification(
+                url: $url,
+                codeHttp: $reponse->statusCode,
+                enTetes: $reponse->headers,
+                corpsReponse: $reponse->body,
+                tempsTotalMs: $timings['total'] ?? $reponse->dureeMs,
+                ttfbMs: $timings['ttfb'] ?? 0,
+                tempsDnsMs: $timings['dns'] ?? 0,
+                tempsConnexionMs: $timings['connect'] ?? 0,
+                tempsHandshakeSslMs: $timings['ssl'] ?? 0,
+                tailleOctets: $reponse->tailleOctets,
+                urlFinale: $reponse->urlFinale !== $url ? $reponse->urlFinale : null,
+                nombreRedirections: 0,
+                infosSsl: $infosSsl,
+            );
+        } catch (\Throwable $e) {
+            return new ContexteVerification(
+                url: $url,
+                codeHttp: 0,
+                enTetes: [],
+                corpsReponse: '',
+                tempsTotalMs: 0,
+                ttfbMs: 0,
+                tempsDnsMs: 0,
+                tempsConnexionMs: 0,
+                tempsHandshakeSslMs: 0,
+                tailleOctets: 0,
+                urlFinale: null,
+                nombreRedirections: 0,
+                infosSsl: null,
+                metriquesPerformance: ['erreur_plateforme' => $e->getMessage()],
+            );
+        }
+    }
+
+    /**
+     * Recuperation standalone via cURL natif (mode autonome).
+     */
+    private function recupererViaStandalone(string $url): ContexteVerification
+    {
         $ch = curl_init();
         $enTetesReponse = [];
 
@@ -137,6 +199,27 @@ final class ClientHttp
      */
     public function testerAccessibilite(string $url): array
     {
+        // Mode plateforme : utiliser le WebClient centralise
+        if (defined('PLATFORM_EMBEDDED') && class_exists(\Platform\Http\WebClient::class)) {
+            try {
+                $webClient = new \Platform\Http\WebClient('site-monitor');
+                $reponse = $webClient->head($url);
+
+                return [
+                    'accessible' => $reponse->statusCode > 0,
+                    'code_http' => $reponse->statusCode,
+                    'erreur' => null,
+                ];
+            } catch (\Throwable $e) {
+                return [
+                    'accessible' => false,
+                    'code_http' => 0,
+                    'erreur' => $e->getMessage(),
+                ];
+            }
+        }
+
+        // Fallback standalone
         $ch = curl_init();
         curl_setopt_array($ch, [
             CURLOPT_URL => $url,
@@ -159,6 +242,35 @@ final class ClientHttp
             'code_http' => (int) ($info['http_code'] ?? 0),
             'erreur' => $erreur ?: null,
         ];
+    }
+
+    /**
+     * Extrait les informations SSL en ouvrant une connexion dediee.
+     * Utilise en mode plateforme ou le handle cURL n'est pas disponible.
+     *
+     * @return array<string, mixed>|null
+     */
+    private function extraireInfosSslDepuisUrl(string $url): ?array
+    {
+        if (!str_starts_with($url, 'https://')) {
+            return null;
+        }
+
+        $ch = curl_init();
+        curl_setopt_array($ch, [
+            CURLOPT_URL => $url,
+            CURLOPT_NOBODY => true,
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_TIMEOUT => 5,
+            CURLOPT_SSL_VERIFYPEER => true,
+            CURLOPT_SSL_VERIFYHOST => 2,
+            CURLOPT_CERTINFO => true,
+        ]);
+        curl_exec($ch);
+        $result = $this->extraireInfosSsl($ch, $url);
+        curl_close($ch);
+
+        return $result;
     }
 
     /**
