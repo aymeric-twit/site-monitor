@@ -177,9 +177,10 @@ final class Migrateur
                 $estNonBloquante = str_contains($msg, 'duplicate column')
                     || str_contains($msg, 'already exists')
                     || str_contains($msg, 'duplicate key name')
-                    || $code === 1709  // Index column size too large (MySQL InnoDB)
-                    || $code === 1071  // Specified key was too long (MySQL)
-                    || (str_starts_with($instructionLower, 'create index') && str_contains($msg, 'too large'));
+                    || str_contains($msg, 'too large')
+                    || str_contains($msg, 'too long')
+                    || str_contains($msg, '1709')
+                    || str_contains($msg, '1071');
 
                 if ($estNonBloquante) {
                     // Index optionnel, continuer sans bloquer l'application
