@@ -165,7 +165,22 @@ final class Migrateur
         );
 
         foreach ($instructions as $instruction) {
-            $this->db->exec($instruction);
+            try {
+                $this->db->exec($instruction);
+            } catch (\PDOException $e) {
+                // Tolerer les erreurs "duplicate column" et "index already exists"
+                // qui surviennent lors de la reprise apres un crash partiel
+                $msg = strtolower($e->getMessage());
+                if (
+                    str_contains($msg, 'duplicate column')
+                    || str_contains($msg, 'column already exists')
+                    || str_contains($msg, 'already exists')
+                    || str_contains($msg, 'duplicate key name')
+                ) {
+                    continue;
+                }
+                throw $e;
+            }
         }
     }
 
