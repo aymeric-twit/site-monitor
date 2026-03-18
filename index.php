@@ -130,22 +130,25 @@
                 </div>
                 <div class="col-lg-4" id="helpPanel">
                     <div class="config-help-panel">
-                        <div class="help-title mb-2">
+                        <a class="help-title mb-2 d-flex align-items-center text-decoration-none" data-bs-toggle="collapse" href="#helpPanelBody" role="button" aria-expanded="false" aria-controls="helpPanelBody">
                             <i class="bi bi-info-circle me-1"></i> Comment ça marche
+                            <i class="bi bi-chevron-down ms-auto small"></i>
+                        </a>
+                        <div class="collapse" id="helpPanelBody">
+                            <ul>
+                                <li><strong>Modèle</strong> : créez un modèle de monitoring avec des règles (title, meta, statuts HTTP, contenu).</li>
+                                <li><strong>Planification</strong> : planifiez des exécutions pour détecter les régressions SEO.</li>
+                                <li><strong>Dashboard</strong> : KPIs de santé, historique des vérifications, alertes.</li>
+                                <li><strong>Alertes</strong> : notifications automatiques en cas de régression détectée.</li>
+                            </ul>
+                            <hr>
+                            <div class="help-title mb-2">
+                                <i class="bi bi-speedometer2 me-1"></i> Quota
+                            </div>
+                            <ul class="mb-0">
+                                <li>1 vérification d'URL = <strong>1 crédit</strong></li>
+                            </ul>
                         </div>
-                        <ul>
-                            <li><strong>Modèle</strong> : créez un modèle de monitoring avec des règles (title, meta, statuts HTTP, contenu).</li>
-                            <li><strong>Planification</strong> : planifiez des exécutions pour détecter les régressions SEO.</li>
-                            <li><strong>Dashboard</strong> : KPIs de santé, historique des vérifications, alertes.</li>
-                            <li><strong>Alertes</strong> : notifications automatiques en cas de régression détectée.</li>
-                        </ul>
-                        <hr>
-                        <div class="help-title mb-2">
-                            <i class="bi bi-speedometer2 me-1"></i> Quota
-                        </div>
-                        <ul class="mb-0">
-                            <li>1 vérification d'URL = <strong>1 crédit</strong></li>
-                        </ul>
                     </div>
                 </div>
             </div>

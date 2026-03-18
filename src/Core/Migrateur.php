@@ -168,15 +168,22 @@ final class Migrateur
             try {
                 $this->db->exec($instruction);
             } catch (\PDOException $e) {
-                // Tolerer les erreurs "duplicate column" et "index already exists"
-                // qui surviennent lors de la reprise apres un crash partiel
+                // Tolerer les erreurs non-bloquantes lors des migrations :
+                // - Reprise apres crash partiel (colonne/index deja existants)
+                // - Limites MySQL InnoDB sur la taille des index (non critique)
                 $msg = strtolower($e->getMessage());
-                if (
-                    str_contains($msg, 'duplicate column')
-                    || str_contains($msg, 'column already exists')
+                $code = (int) $e->getCode();
+                $instructionLower = strtolower($instruction);
+                $estNonBloquante = str_contains($msg, 'duplicate column')
                     || str_contains($msg, 'already exists')
                     || str_contains($msg, 'duplicate key name')
-                ) {
+                    || $code === 1709  // Index column size too large (MySQL InnoDB)
+                    || $code === 1071  // Specified key was too long (MySQL)
+                    || (str_starts_with($instructionLower, 'create index') && str_contains($msg, 'too large'));
+
+                if ($estNonBloquante) {
+                    // Index optionnel, continuer sans bloquer l'application
+                    error_log("[Migrateur] Instruction toleree : {$e->getMessage()}");
                     continue;
                 }
                 throw $e;

@@ -2314,6 +2314,9 @@ function renderDetailsJson(detailsJson) {
 
 // --- Help panel collapse ---
 function collapserHelpPanel() {
-    var panel = document.getElementById('helpPanel');
-    if (panel) panel.classList.add('help-hidden');
+    const body = document.getElementById('helpPanelBody');
+    if (body) {
+        const bsCollapse = bootstrap.Collapse.getInstance(body);
+        if (bsCollapse) bsCollapse.hide();
+    }
 }
