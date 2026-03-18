@@ -193,6 +193,155 @@ var TRANSLATIONS = {
         'metrique.code_http': 'Code HTTP',
         'metrique.tendance': 'Tendance',
 
+        // Dashboard — page principale
+        'dashboard.titreClients': 'Clients',
+        'dashboard.aucunClient': 'Aucun client configure. Commencez par en ajouter un.',
+        'dashboard.ajouterClient': 'Ajouter un client',
+        'dashboard.lancerVerification': 'Lancer une verification',
+
+        // KPIs
+        'kpi.clientsActifs': 'Clients actifs',
+        'kpi.clientsActifsSub': 'clients configures',
+        'kpi.urlsSurveillees': 'URLs surveillees',
+        'kpi.urlsSurveilleesSub': 'URLs configurees',
+        'kpi.executions24h': 'Executions (24h)',
+        'kpi.executions24hSub': 'dernieres 24 heures',
+        'kpi.tauxReussite': 'Taux de reussite',
+        'kpi.tauxReussiteSub': 'sur les dernieres executions',
+
+        // Navigation / Sous-titre
+        'nav.sousTitre': 'Monitoring SEO',
+
+        // Tables generiques
+        'table.nom': 'Nom',
+        'table.domaine': 'Domaine',
+        'table.groupes': 'Groupes',
+        'table.urls': 'URLs',
+        'table.statut': 'Statut',
+        'table.actions': 'Actions',
+        'table.client': 'Client',
+        'table.date': 'Date',
+        'table.dernierStatut': 'Dernier statut',
+        'table.duree': 'Duree',
+        'table.succesEchecs': 'Succes / Echecs',
+        'table.groupe': 'Groupe',
+        'table.libelle': 'Libelle',
+        'table.url': 'URL',
+
+        // Detail client
+        'detail.groupes': 'Groupes d\'URLs',
+        'detail.urls': 'URLs',
+        'detail.modeles': 'Modeles de verification',
+        'detail.tousGroupes': 'Tous les groupes',
+        'detail.ajouterGroupe': 'Ajouter un groupe',
+        'detail.ajouterUrl': 'Ajouter une URL',
+        'detail.aucunGroupe': 'Aucun groupe. Ajoutez un groupe d\'URLs.',
+        'detail.aucuneUrl': 'Aucune URL dans ce groupe.',
+        'detail.aucunModele': 'Aucun modele. Creez un modele de verification.',
+
+        // Modeles (onglet)
+        'modeles.titre': 'Modeles de verification',
+        'modeles.ajouter': 'Ajouter un modele',
+        'modeles.aucun': 'Aucun modele. Creez un modele de verification.',
+        'modeles.aucuneRegle': 'Aucune regle',
+        'modeles.global': 'Global',
+
+        // Executions (onglet)
+        'executions.titre': 'Historique des executions',
+        'executions.tousClients': 'Tous les clients',
+        'executions.tousStatuts': 'Tous les statuts',
+        'executions.aucune': 'Aucune execution. Lancez une verification.',
+        'executions.enAttente': 'En attente',
+        'executions.enCours': 'En cours',
+        'executions.terminee': 'Terminee',
+        'executions.echouee': 'Echouee',
+        'executions.annulee': 'Annulee',
+
+        // Progres
+        'progres.titre': 'Verification en cours',
+        'progres.annuler': 'Annuler',
+        'progres.enAttente': 'En attente...',
+
+        // Actions dans les tables
+        'actions.modifier': 'Modifier',
+        'actions.supprimer': 'Supprimer',
+        'actions.gererRegles': 'Gerer les regles',
+
+        // Modals
+        'modal.annuler': 'Annuler',
+        'modal.confirmer': 'Confirmer',
+        'modal.enregistrer': 'Enregistrer',
+        'modal.fermer': 'Fermer',
+        'modal.confirmation.message': 'Etes-vous sur de vouloir continuer ?',
+        'modal.detail.titre': 'Detail du client',
+
+        // Modal client
+        'modal.client.titre': 'Client',
+        'modal.client.nom': 'Nom',
+        'modal.client.domaine': 'Domaine',
+        'modal.client.domaineAide': 'Sans https://, ex: www.example.com',
+        'modal.client.email': 'Email de contact',
+        'modal.client.actif': 'Actif',
+
+        // Modal groupe
+        'modal.groupe.titre': 'Groupe d\'URLs',
+        'modal.groupe.nom': 'Nom du groupe',
+        'modal.groupe.description': 'Description',
+        'modal.groupe.actif': 'Actif',
+
+        // Modal URL
+        'modal.url.titre': 'URL',
+        'modal.url.adresse': 'Adresse URL',
+        'modal.url.libelle': 'Libelle',
+        'modal.url.libelleAide': 'Nom court pour identifier cette URL',
+        'modal.url.notes': 'Notes',
+        'modal.url.modeles': 'Modeles associes',
+        'modal.url.modelesAide': 'Selectionnez les modeles de verification a appliquer',
+        'modal.url.aucunModele': 'Aucun modele disponible',
+        'modal.url.actif': 'Actif',
+
+        // Modal modele
+        'modal.modele.titre': 'Modele de verification',
+        'modal.modele.nom': 'Nom du modele',
+        'modal.modele.description': 'Description',
+        'modal.modele.client': 'Client',
+        'modal.modele.clientAide': 'Associer a un client specifique ou laisser global',
+        'modal.modele.aucunClient': 'Aucun client',
+        'modal.modele.estGlobal': 'Modele global',
+        'modal.modele.estGlobalAide': 'Un modele global est disponible pour tous les clients',
+        'modal.modele.template': 'Modele de depart',
+        'modal.modele.templateAucun': '\u2014 Aucun (modele vide) \u2014',
+        'modal.modele.templateAide': 'Les regles du template seront automatiquement ajoutees',
+        'modal.modele.reglesCreees': 'regles creees automatiquement',
+
+        // Modal regle
+        'modal.regle.titre': 'Regle de verification',
+        'modal.regle.type': 'Type de regle',
+        'modal.regle.choisirType': '\u2014 Choisir un type \u2014',
+        'modal.regle.nom': 'Nom de la regle',
+        'modal.regle.severite': 'Severite',
+        'modal.regle.configuration': 'Configuration (JSON)',
+        'modal.regle.configurationAide': 'Configuration au format JSON',
+        'modal.regle.actif': 'Actif',
+
+        // Modal verification
+        'modal.verification.titre': 'Lancer une verification',
+        'modal.verification.client': 'Client a verifier',
+        'modal.verification.choisirClient': '\u2014 Choisir un client \u2014',
+        'modal.verification.groupe': 'Groupe d\'URLs',
+        'modal.verification.groupeAide': 'Optionnel : limiter a un groupe',
+        'modal.verification.tousGroupes': 'Tous les groupes',
+        'modal.verification.options': 'Options',
+        'modal.verification.userAgent': 'User-Agent',
+        'modal.verification.uaChrome': 'Chrome (defaut)',
+        'modal.verification.uaGooglebot': 'Googlebot',
+        'modal.verification.uaGooglebotMobile': 'Googlebot Mobile',
+        'modal.verification.uaPersonnalise': 'Personnalise',
+        'modal.verification.userAgentCustom': 'User-Agent personnalise',
+        'modal.verification.timeout': 'Timeout (secondes)',
+        'modal.verification.delai': 'Delai entre requetes (ms)',
+        'modal.verification.demarrer': 'Demarrer',
+
         // Dashboard avance
         'dashboard.score_sante': 'Score de sante',
         'dashboard.changements_detectes': 'Changements detectes',
@@ -460,6 +609,155 @@ var TRANSLATIONS = {
         'metrique.taille': 'Size',
         'metrique.code_http': 'HTTP Code',
         'metrique.tendance': 'Trend',
+
+        // Dashboard — main page
+        'dashboard.titreClients': 'Clients',
+        'dashboard.aucunClient': 'No clients configured. Start by adding one.',
+        'dashboard.ajouterClient': 'Add a client',
+        'dashboard.lancerVerification': 'Run a verification',
+
+        // KPIs
+        'kpi.clientsActifs': 'Active clients',
+        'kpi.clientsActifsSub': 'configured clients',
+        'kpi.urlsSurveillees': 'Monitored URLs',
+        'kpi.urlsSurveilleesSub': 'configured URLs',
+        'kpi.executions24h': 'Executions (24h)',
+        'kpi.executions24hSub': 'last 24 hours',
+        'kpi.tauxReussite': 'Success rate',
+        'kpi.tauxReussiteSub': 'on recent executions',
+
+        // Navigation
+        'nav.sousTitre': 'SEO Monitoring',
+
+        // Generic tables
+        'table.nom': 'Name',
+        'table.domaine': 'Domain',
+        'table.groupes': 'Groups',
+        'table.urls': 'URLs',
+        'table.statut': 'Status',
+        'table.actions': 'Actions',
+        'table.client': 'Client',
+        'table.date': 'Date',
+        'table.dernierStatut': 'Last status',
+        'table.duree': 'Duration',
+        'table.succesEchecs': 'Success / Failures',
+        'table.groupe': 'Group',
+        'table.libelle': 'Label',
+        'table.url': 'URL',
+
+        // Client detail
+        'detail.groupes': 'URL Groups',
+        'detail.urls': 'URLs',
+        'detail.modeles': 'Verification templates',
+        'detail.tousGroupes': 'All groups',
+        'detail.ajouterGroupe': 'Add a group',
+        'detail.ajouterUrl': 'Add a URL',
+        'detail.aucunGroupe': 'No groups. Add a URL group.',
+        'detail.aucuneUrl': 'No URLs in this group.',
+        'detail.aucunModele': 'No templates. Create a verification template.',
+
+        // Templates (tab)
+        'modeles.titre': 'Verification templates',
+        'modeles.ajouter': 'Add a template',
+        'modeles.aucun': 'No templates. Create a verification template.',
+        'modeles.aucuneRegle': 'No rules',
+        'modeles.global': 'Global',
+
+        // Executions (tab)
+        'executions.titre': 'Execution history',
+        'executions.tousClients': 'All clients',
+        'executions.tousStatuts': 'All statuses',
+        'executions.aucune': 'No executions. Run a verification.',
+        'executions.enAttente': 'Pending',
+        'executions.enCours': 'Running',
+        'executions.terminee': 'Completed',
+        'executions.echouee': 'Failed',
+        'executions.annulee': 'Cancelled',
+
+        // Progress
+        'progres.titre': 'Verification in progress',
+        'progres.annuler': 'Cancel',
+        'progres.enAttente': 'Waiting...',
+
+        // Table actions
+        'actions.modifier': 'Edit',
+        'actions.supprimer': 'Delete',
+        'actions.gererRegles': 'Manage rules',
+
+        // Modals
+        'modal.annuler': 'Cancel',
+        'modal.confirmer': 'Confirm',
+        'modal.enregistrer': 'Save',
+        'modal.fermer': 'Close',
+        'modal.confirmation.message': 'Are you sure you want to continue?',
+        'modal.detail.titre': 'Client details',
+
+        // Client modal
+        'modal.client.titre': 'Client',
+        'modal.client.nom': 'Name',
+        'modal.client.domaine': 'Domain',
+        'modal.client.domaineAide': 'Without https://, e.g. www.example.com',
+        'modal.client.email': 'Contact email',
+        'modal.client.actif': 'Active',
+
+        // Group modal
+        'modal.groupe.titre': 'URL Group',
+        'modal.groupe.nom': 'Group name',
+        'modal.groupe.description': 'Description',
+        'modal.groupe.actif': 'Active',
+
+        // URL modal
+        'modal.url.titre': 'URL',
+        'modal.url.adresse': 'URL address',
+        'modal.url.libelle': 'Label',
+        'modal.url.libelleAide': 'Short name to identify this URL',
+        'modal.url.notes': 'Notes',
+        'modal.url.modeles': 'Associated templates',
+        'modal.url.modelesAide': 'Select verification templates to apply',
+        'modal.url.aucunModele': 'No templates available',
+        'modal.url.actif': 'Active',
+
+        // Template modal
+        'modal.modele.titre': 'Verification template',
+        'modal.modele.nom': 'Template name',
+        'modal.modele.description': 'Description',
+        'modal.modele.client': 'Client',
+        'modal.modele.clientAide': 'Associate with a specific client or leave global',
+        'modal.modele.aucunClient': 'No client',
+        'modal.modele.estGlobal': 'Global template',
+        'modal.modele.estGlobalAide': 'A global template is available for all clients',
+        'modal.modele.template': 'Starting template',
+        'modal.modele.templateAucun': '\u2014 None (empty model) \u2014',
+        'modal.modele.templateAide': 'Template rules will be automatically added',
+        'modal.modele.reglesCreees': 'rules automatically created',
+
+        // Rule modal
+        'modal.regle.titre': 'Verification rule',
+        'modal.regle.type': 'Rule type',
+        'modal.regle.choisirType': '\u2014 Choose a type \u2014',
+        'modal.regle.nom': 'Rule name',
+        'modal.regle.severite': 'Severity',
+        'modal.regle.configuration': 'Configuration (JSON)',
+        'modal.regle.configurationAide': 'Configuration in JSON format',
+        'modal.regle.actif': 'Active',
+
+        // Verification modal
+        'modal.verification.titre': 'Run a verification',
+        'modal.verification.client': 'Client to verify',
+        'modal.verification.choisirClient': '\u2014 Choose a client \u2014',
+        'modal.verification.groupe': 'URL group',
+        'modal.verification.groupeAide': 'Optional: limit to a group',
+        'modal.verification.tousGroupes': 'All groups',
+        'modal.verification.options': 'Options',
+        'modal.verification.userAgent': 'User-Agent',
+        'modal.verification.uaChrome': 'Chrome (default)',
+        'modal.verification.uaGooglebot': 'Googlebot',
+        'modal.verification.uaGooglebotMobile': 'Googlebot Mobile',
+        'modal.verification.uaPersonnalise': 'Custom',
+        'modal.verification.userAgentCustom': 'Custom User-Agent',
+        'modal.verification.timeout': 'Timeout (seconds)',
+        'modal.verification.delai': 'Delay between requests (ms)',
+        'modal.verification.demarrer': 'Start',
 
         // Advanced dashboard
         'dashboard.score_sante': 'Health score',

@@ -55,6 +55,21 @@ final class DepotResultatRegle
         return array_map(fn(array $l): ResultatRegle => ResultatRegle::depuisLigne($l), $stmt->fetchAll());
     }
 
+    /**
+     * Retourne tous les resultats d'une execution indexes par "{regleId}_{urlId}".
+     *
+     * @return array<string, ResultatRegle>
+     */
+    public function trouverParExecutionIndexes(int $executionId): array
+    {
+        $resultats = $this->trouverParExecution($executionId);
+        $index = [];
+        foreach ($resultats as $r) {
+            $index[$r->regleId . '_' . $r->urlId] = $r;
+        }
+        return $index;
+    }
+
     public function creer(ResultatRegle $resultat): int
     {
         $stmt = $this->db->prepare('

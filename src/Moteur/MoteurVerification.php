@@ -187,7 +187,7 @@ final class MoteurVerification
 
         // Finaliser l'execution
         $dureeMs = (int) ((hrtime(true) - $tempsDebut) / 1_000_000);
-        $statut = $totalEchecs > 0 ? StatutExecution::Termine : StatutExecution::Termine;
+        $statut = StatutExecution::Termine;
         $this->depotExecution->terminer($executionId, $statut, $dureeMs);
     }
 

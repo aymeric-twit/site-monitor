@@ -79,17 +79,24 @@ async function chargerDashboard() {
         remplirSelectsClient(cacheClients);
         remplirFiltreTendancesClient(cacheClients);
 
+        // Masquer les blocs vides si aucun client
+        const aucunClient = !cacheClients || cacheClients.length === 0;
+        document.getElementById('cardSanteClients').style.display = aucunClient ? 'none' : '';
+        document.getElementById('cardTendances').style.display = aucunClient ? 'none' : '';
+
         // Alertes recentes
         renderAlertesRecentes(d.alertes_recentes || []);
         mettreAJourBadgeAlertes(d.alertes_non_lues || 0);
 
-        // Charger les sections avancees en parallele
-        Promise.all([
-            chargerSanteParClient(),
-            chargerUrlsARisque(),
-            chargerChangementsRecents(),
-            chargerTendances(),
-        ]);
+        // Charger les sections avancees en parallele (seulement si des clients existent)
+        if (!aucunClient) {
+            Promise.all([
+                chargerSanteParClient(),
+                chargerUrlsARisque(),
+                chargerChangementsRecents(),
+                chargerTendances(),
+            ]);
+        }
 
     } catch (e) {
         console.error('chargerDashboard:', e);
@@ -742,6 +749,28 @@ function supprimerUrl(id) {
 // Modeles : CRUD
 // ---------------------------------------------------------------------------
 
+let _templatesCharges = false;
+async function peuplerSelectTemplates() {
+    if (_templatesCharges) return;
+    try {
+        const res = await apiGet({ entite: 'modele', action: 'templates' });
+        if (res.erreur || !res.donnees) return;
+        const select = document.getElementById('modeleTemplate');
+        if (!select) return;
+        // Garder la premiere option (placeholder)
+        select.querySelectorAll('option:not(:first-child)').forEach(o => o.remove());
+        for (const [cle, tpl] of Object.entries(res.donnees)) {
+            const opt = document.createElement('option');
+            opt.value = cle;
+            opt.textContent = tpl.nom + ' (' + tpl.nb_regles + ' regles)';
+            select.appendChild(opt);
+        }
+        _templatesCharges = true;
+    } catch (e) {
+        console.error('peuplerSelectTemplates:', e);
+    }
+}
+
 async function chargerModeles() {
     try {
         const res = await apiGet({ entite: 'modele', action: 'lister' });
@@ -837,6 +866,13 @@ function reinitialiserFormModele() {
     document.getElementById('modeleId').value = '';
     document.getElementById('modeleEstGlobal').checked = false;
     document.getElementById('modalModeleLabel').textContent = t('modele.ajouter', 'Creer un modele');
+
+    // Afficher le bloc template (creation uniquement)
+    const blocTemplate = document.getElementById('blocModeleTemplate');
+    if (blocTemplate) blocTemplate.style.display = '';
+
+    // Peupler le select template si pas encore fait
+    peuplerSelectTemplates();
 }
 
 async function ouvrirEditionModele(id) {
@@ -853,6 +889,10 @@ async function ouvrirEditionModele(id) {
         document.getElementById('modeleClientId').value = m.client_id || '';
         document.getElementById('modeleEstGlobal').checked = !!m.est_global;
         document.getElementById('modalModeleLabel').textContent = t('modele.modifier', 'Modifier le modele');
+
+        // Masquer le bloc template en mode edition
+        const blocTemplate = document.getElementById('blocModeleTemplate');
+        if (blocTemplate) blocTemplate.style.display = 'none';
 
         const modal = bootstrap.Modal.getOrCreateInstance(document.getElementById('modalModele'));
         modal.show();
@@ -876,13 +916,23 @@ async function sauvegarderModele(e) {
     };
     if (id) donnees.id = id;
 
+    // Template uniquement a la creation
+    if (!id) {
+        const template = document.getElementById('modeleTemplate')?.value;
+        if (template) donnees.template = template;
+    }
+
     try {
         const res = await apiPost(donnees);
         if (res.erreur) {
             afficherToast(res.erreur, 'danger');
             return;
         }
-        afficherToast(res.message || t('message.succes'), 'success');
+        let msg = res.message || t('message.succes');
+        if (res.donnees?.regles_creees > 0) {
+            msg += ' (' + res.donnees.regles_creees + ' ' + t('modal.modele.reglesCreees', 'regles creees') + ')';
+        }
+        afficherToast(msg, 'success');
         bootstrap.Modal.getInstance(document.getElementById('modalModele'))?.hide();
         chargerModeles();
     } catch (e) {
@@ -1093,9 +1143,9 @@ async function chargerExecutions() {
             const statutCouleurs = {
                 'en_attente': 'bg-secondary',
                 'en_cours': 'bg-primary',
-                'terminee': 'bg-success',
-                'echouee': 'bg-danger',
-                'annulee': 'bg-warning text-dark',
+                'termine': 'bg-success',
+                'erreur': 'bg-danger',
+                'annule': 'bg-warning text-dark',
             };
             const badgeClass = statutCouleurs[ex.statut] || 'bg-secondary';
             const statutLabel = t('statut.' + (ex.statut || ''), ex.statut || '');

@@ -40,6 +40,7 @@ use SiteMonitor\Stockage\DepotResultatIndexation;
 use SiteMonitor\Stockage\DepotResultatRegle;
 use SiteMonitor\Stockage\DepotSnapshot;
 use SiteMonitor\Stockage\DepotUrl;
+use SiteMonitor\Moteur\RegistreTemplates;
 
 try {
     $db = Connexion::obtenir();
@@ -384,9 +385,10 @@ function gererModeles(\PDO $db, string $action): array
     return match ($action) {
         'lister' => ['donnees' => $depot->statistiques()],
         'obtenir' => obtenirModele($depot),
-        'creer' => creerModele($depot),
+        'creer' => creerModele($db, $depot),
         'modifier' => modifierModele($depot),
         'supprimer' => supprimerModele($depot),
+        'templates' => ['donnees' => RegistreTemplates::lister()],
         default => ['erreur' => "Action inconnue : {$action}"],
     };
 }
@@ -398,7 +400,7 @@ function obtenirModele(DepotModele $depot): array
     return $modele ? ['donnees' => $modele->versTableau()] : ['erreur' => 'Modele introuvable'];
 }
 
-function creerModele(DepotModele $depot): array
+function creerModele(\PDO $db, DepotModele $depot): array
 {
     $nom = trim($_POST['nom'] ?? '');
     if ($nom === '') {
@@ -416,7 +418,35 @@ function creerModele(DepotModele $depot): array
     );
 
     $id = $depot->creer($modele);
-    return ['donnees' => ['id' => $id], 'message' => 'Modele cree'];
+
+    // Appliquer un template si demande
+    $reglesCreees = 0;
+    $templateCle = trim($_POST['template'] ?? '');
+    if ($templateCle !== '') {
+        $reglesTemplate = RegistreTemplates::obtenir($templateCle);
+        if ($reglesTemplate !== null) {
+            $depotRegle = new DepotRegle($db);
+            $ordre = 1;
+            foreach ($reglesTemplate as $def) {
+                $regle = new Regle(
+                    id: null,
+                    modeleId: $id,
+                    typeRegle: $def['type_regle'],
+                    nom: $def['nom'],
+                    configuration: $def['configuration'],
+                    severite: $def['severite'],
+                    ordreTri: $ordre++,
+                    actif: true,
+                    creeLe: null,
+                    modifieLe: null,
+                );
+                $depotRegle->creer($regle);
+                $reglesCreees++;
+            }
+        }
+    }
+
+    return ['donnees' => ['id' => $id, 'regles_creees' => $reglesCreees], 'message' => 'Modele cree'];
 }
 
 function modifierModele(DepotModele $depot): array

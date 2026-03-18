@@ -17,8 +17,8 @@ final class DepotAlerte
     {
         $stmt = $this->db->prepare('
             INSERT INTO sm_alertes
-                (execution_id, client_id, severite, sujet, corps_texte, destinataires, envoyee)
-            VALUES (:execution_id, :client_id, :severite, :sujet, :corps_texte, :destinataires, :envoyee)
+                (execution_id, client_id, severite, sujet, corps_texte, destinataires, envoyee, type_alerte)
+            VALUES (:execution_id, :client_id, :severite, :sujet, :corps_texte, :destinataires, :envoyee, :type_alerte)
         ');
         $stmt->execute([
             'execution_id' => $alerte->executionId,
@@ -28,6 +28,7 @@ final class DepotAlerte
             'corps_texte' => $alerte->corpsTexte,
             'destinataires' => $alerte->destinataires,
             'envoyee' => $alerte->envoyee ? 1 : 0,
+            'type_alerte' => $alerte->typeAlerte,
         ]);
         return (int) $this->db->lastInsertId();
     }

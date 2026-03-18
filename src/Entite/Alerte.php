@@ -22,6 +22,7 @@ final readonly class Alerte
         public bool $envoyee,
         public ?string $envoyeeLe,
         public ?string $creeLe,
+        public string $typeAlerte = 'echec',
     ) {}
 
     /**
@@ -40,6 +41,7 @@ final readonly class Alerte
             envoyee: (bool) ($ligne['envoyee'] ?? false),
             envoyeeLe: $ligne['envoyee_le'] ?? null,
             creeLe: $ligne['cree_le'] ?? null,
+            typeAlerte: (string) ($ligne['type_alerte'] ?? 'echec'),
         );
     }
 
@@ -59,6 +61,7 @@ final readonly class Alerte
             'envoyee' => $this->envoyee,
             'envoyee_le' => $this->envoyeeLe,
             'cree_le' => $this->creeLe,
+            'type_alerte' => $this->typeAlerte,
         ];
     }
 }

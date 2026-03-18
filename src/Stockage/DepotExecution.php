@@ -49,6 +49,26 @@ final class DepotExecution
         return $ligne ? Execution::depuisLigne($ligne) : null;
     }
 
+    /**
+     * Trouve la derniere execution terminee du meme client, anterieure a l'ID donne.
+     */
+    public function trouverPrecedente(int $executionId): ?Execution
+    {
+        $stmt = $this->db->prepare('
+            SELECT e2.* FROM sm_executions e2
+            INNER JOIN sm_executions e1 ON e1.id = :id AND e2.client_id = e1.client_id
+            WHERE e2.id < :id2 AND e2.statut = :statut
+            ORDER BY e2.id DESC LIMIT 1
+        ');
+        $stmt->execute([
+            'id' => $executionId,
+            'id2' => $executionId,
+            'statut' => StatutExecution::Termine->value,
+        ]);
+        $ligne = $stmt->fetch();
+        return $ligne ? Execution::depuisLigne($ligne) : null;
+    }
+
     public function creer(Execution $execution): int
     {
         $stmt = $this->db->prepare('

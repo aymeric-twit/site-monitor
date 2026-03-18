@@ -49,34 +49,6 @@
     </div>
 
     <!-- ================================================================== -->
-    <!-- Panneau d'aide                                                     -->
-    <!-- ================================================================== -->
-    <div class="row mb-4">
-        <div class="col-lg-8">
-        </div>
-        <div class="col-lg-4" id="helpPanel">
-            <div class="config-help-panel">
-                <div class="help-title mb-2">
-                    <i class="bi bi-info-circle me-1"></i> Comment ça marche
-                </div>
-                <ul>
-                    <li><strong>Modèle</strong> : créez un modèle de monitoring avec des règles (title, meta, statuts HTTP, contenu).</li>
-                    <li><strong>Planification</strong> : planifiez des exécutions pour détecter les régressions SEO.</li>
-                    <li><strong>Dashboard</strong> : KPIs de santé, historique des vérifications, alertes.</li>
-                    <li><strong>Alertes</strong> : notifications automatiques en cas de régression détectée.</li>
-                </ul>
-                <hr>
-                <div class="help-title mb-2">
-                    <i class="bi bi-speedometer2 me-1"></i> Quota
-                </div>
-                <ul class="mb-0">
-                    <li>1 vérification d'URL = <strong>1 crédit</strong></li>
-                </ul>
-            </div>
-        </div>
-    </div>
-
-    <!-- ================================================================== -->
     <!-- Onglets principaux                                                 -->
     <!-- ================================================================== -->
     <ul class="nav nav-tabs mb-4" id="tabsPrincipaux" role="tablist">
@@ -115,42 +87,66 @@
         <!-- ============================================================== -->
         <div class="tab-pane fade show active" id="pane-dashboard" role="tabpanel" aria-labelledby="tab-dashboard">
 
-            <!-- 1. KPI Cards (7) -->
-            <div class="kpi-row mb-4" id="kpiRow">
-                <div class="kpi-card kpi-dark">
-                    <div class="kpi-value" id="kpiClientsActifs">0</div>
-                    <div class="kpi-label" data-i18n="kpi.clientsActifs">Clients actifs</div>
-                    <div class="kpi-sub" data-i18n="kpi.clientsActifsSub">domaines surveilles</div>
+            <!-- 1. KPI Cards + Help Panel -->
+            <div class="row mb-4">
+                <div class="col-lg-8">
+                    <div class="kpi-row" id="kpiRow">
+                        <div class="kpi-card kpi-dark">
+                            <div class="kpi-value" id="kpiClientsActifs">0</div>
+                            <div class="kpi-label" data-i18n="kpi.clientsActifs">Clients actifs</div>
+                            <div class="kpi-sub" data-i18n="kpi.clientsActifsSub">domaines surveilles</div>
+                        </div>
+                        <div class="kpi-card">
+                            <div class="kpi-value" id="kpiUrlsSurveillees">0</div>
+                            <div class="kpi-label" data-i18n="kpi.urlsSurveillees">URLs surveillees</div>
+                            <div class="kpi-sub" data-i18n="kpi.urlsSurveilleesSub">pages monitorees</div>
+                        </div>
+                        <div class="kpi-card kpi-gold">
+                            <div class="kpi-value" id="kpiExecutions24h">0</div>
+                            <div class="kpi-label" data-i18n="kpi.executions24h">Executions (24h)</div>
+                            <div class="kpi-sub" data-i18n="kpi.executions24hSub">verifications lancees</div>
+                        </div>
+                        <div class="kpi-card kpi-green">
+                            <div class="kpi-value" id="kpiTauxReussite">--</div>
+                            <div class="kpi-label" data-i18n="kpi.tauxReussite">Taux de reussite</div>
+                            <div class="kpi-sub" data-i18n="kpi.tauxReussiteSub">derniere execution</div>
+                        </div>
+                        <div class="kpi-card kpi-teal">
+                            <div class="kpi-value" id="kpiScoreSante">--</div>
+                            <div class="kpi-label" data-i18n="dashboard.score_sante">Score de sante</div>
+                            <div class="kpi-sub">%</div>
+                        </div>
+                        <div class="kpi-card kpi-orange">
+                            <div class="kpi-value" id="kpiChangementsDetectes">0</div>
+                            <div class="kpi-label" data-i18n="dashboard.changements_detectes">Changements detectes</div>
+                            <div class="kpi-sub" data-i18n="dashboard.7_jours">7 jours</div>
+                        </div>
+                        <div class="kpi-card kpi-red">
+                            <div class="kpi-value" id="kpiAlertesCritiques">0</div>
+                            <div class="kpi-label" data-i18n="dashboard.alertes_critiques">Alertes critiques</div>
+                            <div class="kpi-sub">non traitees</div>
+                        </div>
+                    </div>
                 </div>
-                <div class="kpi-card">
-                    <div class="kpi-value" id="kpiUrlsSurveillees">0</div>
-                    <div class="kpi-label" data-i18n="kpi.urlsSurveillees">URLs surveillees</div>
-                    <div class="kpi-sub" data-i18n="kpi.urlsSurveilleesSub">pages monitorees</div>
-                </div>
-                <div class="kpi-card kpi-gold">
-                    <div class="kpi-value" id="kpiExecutions24h">0</div>
-                    <div class="kpi-label" data-i18n="kpi.executions24h">Executions (24h)</div>
-                    <div class="kpi-sub" data-i18n="kpi.executions24hSub">verifications lancees</div>
-                </div>
-                <div class="kpi-card kpi-green">
-                    <div class="kpi-value" id="kpiTauxReussite">--</div>
-                    <div class="kpi-label" data-i18n="kpi.tauxReussite">Taux de reussite</div>
-                    <div class="kpi-sub" data-i18n="kpi.tauxReussiteSub">derniere execution</div>
-                </div>
-                <div class="kpi-card kpi-teal">
-                    <div class="kpi-value" id="kpiScoreSante">--</div>
-                    <div class="kpi-label" data-i18n="dashboard.score_sante">Score de sante</div>
-                    <div class="kpi-sub">%</div>
-                </div>
-                <div class="kpi-card kpi-orange">
-                    <div class="kpi-value" id="kpiChangementsDetectes">0</div>
-                    <div class="kpi-label" data-i18n="dashboard.changements_detectes">Changements detectes</div>
-                    <div class="kpi-sub" data-i18n="dashboard.7_jours">7 jours</div>
-                </div>
-                <div class="kpi-card kpi-red">
-                    <div class="kpi-value" id="kpiAlertesCritiques">0</div>
-                    <div class="kpi-label" data-i18n="dashboard.alertes_critiques">Alertes critiques</div>
-                    <div class="kpi-sub">non traitees</div>
+                <div class="col-lg-4" id="helpPanel">
+                    <div class="config-help-panel">
+                        <div class="help-title mb-2">
+                            <i class="bi bi-info-circle me-1"></i> Comment ça marche
+                        </div>
+                        <ul>
+                            <li><strong>Modèle</strong> : créez un modèle de monitoring avec des règles (title, meta, statuts HTTP, contenu).</li>
+                            <li><strong>Planification</strong> : planifiez des exécutions pour détecter les régressions SEO.</li>
+                            <li><strong>Dashboard</strong> : KPIs de santé, historique des vérifications, alertes.</li>
+                            <li><strong>Alertes</strong> : notifications automatiques en cas de régression détectée.</li>
+                        </ul>
+                        <hr>
+                        <div class="help-title mb-2">
+                            <i class="bi bi-speedometer2 me-1"></i> Quota
+                        </div>
+                        <ul class="mb-0">
+                            <li>1 vérification d'URL = <strong>1 crédit</strong></li>
+                        </ul>
+                    </div>
                 </div>
             </div>
 
@@ -352,9 +348,9 @@
                         <option value="" data-i18n="executions.tousStatuts">Tous les statuts</option>
                         <option value="en_attente" data-i18n="executions.enAttente">En attente</option>
                         <option value="en_cours" data-i18n="executions.enCours">En cours</option>
-                        <option value="terminee" data-i18n="executions.terminee">Terminee</option>
-                        <option value="echouee" data-i18n="executions.echouee">Echouee</option>
-                        <option value="annulee" data-i18n="executions.annulee">Annulee</option>
+                        <option value="termine" data-i18n="executions.terminee">Terminee</option>
+                        <option value="erreur" data-i18n="executions.echouee">Echouee</option>
+                        <option value="annule" data-i18n="executions.annulee">Annulee</option>
                     </select>
                     <select class="form-select form-select-sm" id="filtreExecutionClient" style="width:auto;">
                         <option value="" data-i18n="executions.tousClients">Tous les clients</option>
@@ -739,6 +735,13 @@
                     <div class="mb-3">
                         <label for="modeleDescription" class="form-label" data-i18n="modal.modele.description">Description</label>
                         <textarea class="form-control" id="modeleDescription" name="description" rows="3" placeholder="Ensemble de regles pour verifier..."></textarea>
+                    </div>
+                    <div class="mb-3" id="blocModeleTemplate">
+                        <label for="modeleTemplate" class="form-label" data-i18n="modal.modele.template">Modele de depart</label>
+                        <select class="form-select" id="modeleTemplate" name="template">
+                            <option value="" data-i18n="modal.modele.templateAucun">— Aucun (modele vide) —</option>
+                        </select>
+                        <div class="form-text" data-i18n="modal.modele.templateAide">Les regles du template seront automatiquement ajoutees</div>
                     </div>
                     <div class="mb-3">
                         <label for="modeleClientId" class="form-label" data-i18n="modal.modele.client">Client (optionnel)</label>
