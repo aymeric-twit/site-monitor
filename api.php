@@ -46,7 +46,12 @@ try {
     $db = Connexion::obtenir();
 
     // S'assurer que les tables existent
-    (new Migrateur($db))->migrer();
+    try {
+        (new Migrateur($db))->migrer();
+    } catch (\Throwable $eMigration) {
+        // Ne pas bloquer l'API si une migration echoue (index trop grand, etc.)
+        error_log('[Site Monitor] Migration non-bloquante : ' . $eMigration->getMessage());
+    }
 
     $utilisateurId = Utilisateur::idCourant();
 
