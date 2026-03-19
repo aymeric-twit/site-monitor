@@ -683,6 +683,11 @@ function lancerExecution(\PDO $db, DepotExecution $depot): array
     $cmd = sprintf('%s %s --job=%s > /dev/null 2>&1 &', $phpBin, escapeshellarg($workerPath), $jobId);
     exec($cmd);
 
+    // Décompter les crédits
+    if (class_exists(\Platform\Module\Quota::class)) {
+        \Platform\Module\Quota::track('site-monitor');
+    }
+
     return [
         'donnees' => ['job_id' => $jobId],
         'message' => 'Verification lancee',
