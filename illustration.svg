@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 140">
+  <rect width="200" height="140" fill="#f8fafc" rx="8"/>
+  <!-- Monitor frame -->
+  <rect x="30" y="15" width="140" height="90" rx="8" fill="#004c4c"/>
+  <rect x="36" y="21" width="128" height="72" rx="4" fill="#e8f4f4"/>
+  <!-- Monitor stand -->
+  <rect x="85" y="105" width="30" height="10" rx="2" fill="#004c4c"/>
+  <rect x="70" y="115" width="60" height="6" rx="3" fill="#004c4c" opacity="0.6"/>
+  <!-- Heartbeat/pulse line -->
+  <polyline points="40,57 55,57 62,57 68,42 74,72 80,35 86,65 92,50 98,57 110,57 118,57 124,42 130,68 136,38 142,62 148,50 155,57 158,57"
+            fill="none" stroke="#66b2b2" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- Pulse dot -->
+  <circle cx="136" cy="38" r="4" fill="#fbb03b"/>
+  <circle cx="136" cy="38" r="7" fill="#fbb03b" opacity="0.25"/>
+  <!-- Status indicator -->
+  <circle cx="152" cy="28" r="4" fill="#198754"/>
+  <circle cx="152" cy="28" r="6" fill="#198754" opacity="0.3"/>
+  <!-- Grid lines -->
+  <line x1="40" y1="40" x2="158" y2="40" stroke="#004c4c" stroke-width="0.3" opacity="0.3"/>
+  <line x1="40" y1="57" x2="158" y2="57" stroke="#004c4c" stroke-width="0.3" opacity="0.3"/>
+  <line x1="40" y1="74" x2="158" y2="74" stroke="#004c4c" stroke-width="0.3" opacity="0.3"/>
+</svg>

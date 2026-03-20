@@ -92,7 +92,7 @@ final class DepotMetriqueHttp
                 FROM sm_metriques_http m
                 JOIN sm_executions e ON e.id = m.execution_id
                 WHERE e.client_id = :client_id
-                  AND m.cree_le >= datetime('now', '-30 days')
+                  AND m.cree_le >= " . \SiteMonitor\Core\Connexion::ilYA('-30 days') . "
                 GROUP BY DATE(m.cree_le)
                 ORDER BY jour ASC
             ";
@@ -104,7 +104,7 @@ final class DepotMetriqueHttp
                        ROUND(AVG(m.ttfb_ms)) AS ttfb_moyen,
                        ROUND(AVG(m.temps_total_ms)) AS temps_total_moyen
                 FROM sm_metriques_http m
-                WHERE m.cree_le >= datetime('now', '-30 days')
+                WHERE m.cree_le >= " . \SiteMonitor\Core\Connexion::ilYA('-30 days') . "
                 GROUP BY DATE(m.cree_le)
                 ORDER BY jour ASC
             ";

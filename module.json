@@ -4,6 +4,7 @@
     "description": "Monitoring de non-regression et verification de sante SEO des sites web",
     "version": "1.0.0",
     "icon": "bi-shield-check",
+    "illustration": "illustration.svg",
     "entry_point": "index.php",
     "sort_order": 15,
     "quota_mode": "api_call",

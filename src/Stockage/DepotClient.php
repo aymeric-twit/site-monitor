@@ -193,7 +193,7 @@ final class DepotClient
                     FROM sm_metriques_http m
                     JOIN sm_executions e3 ON e3.id = m.execution_id
                     WHERE e3.client_id = c.id
-                      AND m.cree_le >= datetime('now', '-7 days')
+                      AND m.cree_le >= " . \SiteMonitor\Core\Connexion::ilYA('-7 days') . "
                    ) AS ttfb_moyen
             FROM sm_clients c
             LEFT JOIN sm_groupes_urls g ON g.client_id = c.id

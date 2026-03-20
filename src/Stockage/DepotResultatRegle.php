@@ -150,7 +150,7 @@ final class DepotResultatRegle
             JOIN sm_groupes_urls g ON g.id = u.groupe_id
             JOIN sm_clients c ON c.id = g.client_id
             JOIN sm_executions e ON e.id = r.execution_id
-            WHERE e.cree_le >= datetime('now', '-7 days')
+            WHERE e.cree_le >= " . \SiteMonitor\Core\Connexion::ilYA('-7 days') . "
             GROUP BY u.id, u.url, u.libelle, c.id, c.nom
             HAVING nb_echecs > 0
             ORDER BY nb_echecs DESC

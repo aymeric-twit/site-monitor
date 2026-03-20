@@ -58,6 +58,25 @@ final class Connexion
     }
 
     /**
+     * Expression SQL pour "maintenant moins X unités de temps".
+     * Compatible SQLite et MySQL/MariaDB.
+     *
+     * @param string $intervalle Ex: '-24 hours', '-7 days', '-30 days'
+     */
+    public static function ilYA(string $intervalle): string
+    {
+        if (self::estMysql()) {
+            // Convertir '-24 hours' → 'INTERVAL 24 HOUR', '-7 days' → 'INTERVAL 7 DAY'
+            if (preg_match('/^-(\d+)\s+(hour|day|month|minute|week)s?$/i', $intervalle, $m)) {
+                return 'NOW() - INTERVAL ' . $m[1] . ' ' . strtoupper($m[2]);
+            }
+            return 'NOW()';
+        }
+
+        return "datetime('now', '{$intervalle}')";
+    }
+
+    /**
      * Injecte une connexion PDO (utile pour les tests).
      */
     public static function definir(\PDO $pdo): void

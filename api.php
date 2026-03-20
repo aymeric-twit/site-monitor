@@ -774,7 +774,7 @@ function genererDashboardPrincipal(\PDO $db, ?int $utilisateurId): array
         JOIN sm_regles reg ON reg.id = r.regle_id
         JOIN sm_executions e ON e.id = r.execution_id
         WHERE reg.type_regle = 'changement_contenu' AND r.succes = 0
-          AND e.cree_le >= datetime('now', '-7 days')
+          AND e.cree_le >= " . \SiteMonitor\Core\Connexion::ilYA('-7 days') . "
     ")->fetchColumn();
 
     // Alertes critiques non envoyees

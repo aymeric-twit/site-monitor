@@ -139,9 +139,10 @@ final class DepotExecution
         )->fetchColumn();
 
         // Dernieres 24h
+        $ilYA24h = \SiteMonitor\Core\Connexion::ilYA('-24 hours');
         $stmt24h = $this->db->query("
             SELECT COUNT(*) FROM sm_executions
-            WHERE cree_le >= datetime('now', '-24 hours')
+            WHERE cree_le >= {$ilYA24h}
         ");
         $dernieres24h = (int) $stmt24h->fetchColumn();
 
@@ -176,7 +177,7 @@ final class DepotExecution
                        THEN succes * 100.0 / (succes + echecs + avertissements) ELSE NULL END) AS taux_moyen,
                    AVG(duree_ms) AS duree_moyenne
             FROM sm_executions
-            WHERE cree_le >= datetime('now', '-30 days')
+            WHERE cree_le >= " . \SiteMonitor\Core\Connexion::ilYA('-30 days') . "
         ";
         $params = [];
         if ($clientId !== null) {
@@ -223,11 +224,11 @@ final class DepotExecution
      */
     public function purger(int $joursRetention = 90): int
     {
-        $stmt = $this->db->prepare("
+        $ilYA = \SiteMonitor\Core\Connexion::ilYA("-{$joursRetention} days");
+        $stmt = $this->db->query("
             DELETE FROM sm_executions
-            WHERE cree_le < datetime('now', :jours || ' days')
+            WHERE cree_le < {$ilYA}
         ");
-        $stmt->execute(['jours' => -$joursRetention]);
         return $stmt->rowCount();
     }
 }
