@@ -129,6 +129,7 @@
                     </div>
                 </div>
                 <div class="col-lg-4" id="helpPanel">
+                    <div id="platformCreditsSlot"></div>
                     <div class="config-help-panel">
                         <a class="help-title mb-2 d-flex align-items-center text-decoration-none" data-bs-toggle="collapse" href="#helpPanelBody" role="button" aria-expanded="false" aria-controls="helpPanelBody">
                             <i class="bi bi-info-circle me-1"></i> Comment ça marche
