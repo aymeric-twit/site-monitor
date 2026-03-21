@@ -27,10 +27,16 @@ final class Connexion
         }
 
         // Mode plateforme : reutiliser la connexion existante
-        if (defined('PLATFORM_EMBEDDED') || defined('PLATFORM_IFRAME')) {
-            self::$instance = self::obtenirConnexionPlateforme();
-            self::$pilote = self::$instance->getAttribute(\PDO::ATTR_DRIVER_NAME);
-            return self::$instance;
+        // PLATFORM_EMBEDDED (page embedded), PLATFORM_IFRAME (iframe),
+        // PLATFORM_DOMAIN (passthrough/ajax routes)
+        if (defined('PLATFORM_EMBEDDED') || defined('PLATFORM_IFRAME') || defined('PLATFORM_DOMAIN')) {
+            try {
+                self::$instance = self::obtenirConnexionPlateforme();
+                self::$pilote = self::$instance->getAttribute(\PDO::ATTR_DRIVER_NAME);
+                return self::$instance;
+            } catch (\Throwable $e) {
+                // Fallback vers standalone si la connexion plateforme echoue
+            }
         }
 
         // Mode standalone : creer une connexion locale
