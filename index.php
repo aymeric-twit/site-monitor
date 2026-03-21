@@ -413,10 +413,12 @@
         <div class="tab-pane fade" id="pane-indexation" role="tabpanel" aria-labelledby="tab-indexation">
 
             <!-- Formulaire de lancement -->
-            <div class="card mb-4">
-                <div class="card-header">
+            <div class="card mb-4" id="config-card">
+                <div class="card-header d-flex justify-content-between align-items-center">
                     <h6 class="mb-0 fw-bold"><i class="bi bi-search me-2"></i><span data-i18n="indexation.titre">Audit d'indexation</span></h6>
+                    <button type="button" class="config-toggle" data-bs-toggle="collapse" data-bs-target="#configBody" aria-expanded="true"><i class="bi bi-chevron-down"></i></button>
                 </div>
+                <div class="collapse show" id="configBody">
                 <div class="card-body">
                     <form id="formIndexation" method="POST">
                         <div class="row g-3">
@@ -451,6 +453,7 @@
                             </button>
                         </div>
                     </form>
+                </div>
                 </div>
             </div>
 

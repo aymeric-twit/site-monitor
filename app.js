@@ -1429,6 +1429,10 @@ function demarrerPolling(jobId) {
                 // Rafraichir les donnees
                 chargerDashboard();
                 chargerExecutions();
+
+                // Auto-collapse config
+                var configBody = document.getElementById('configBody');
+                if (configBody) { bootstrap.Collapse.getOrCreateInstance(configBody, {toggle:false}).hide(); }
             }
 
         } catch (e) {

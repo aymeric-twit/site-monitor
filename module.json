@@ -9,6 +9,7 @@
     "sort_order": 15,
     "quota_mode": "api_call",
     "default_quota": 5000,
+    "unite_label": "appels API",
     "display_mode": "embedded",
     "env_keys": [],
     "languages": [
@@ -64,5 +65,6 @@
     ],
     "credits_par_analyse": 1,
     "units_per_credit": 1,
-    "periode_quota": "mois"
+    "periode_quota": "mois",
+    "unites_par_credit": 1
 }
