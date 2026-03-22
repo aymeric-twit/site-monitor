@@ -643,6 +643,14 @@ function obtenirExecution(DepotExecution $depot): array
 
 function lancerExecution(\PDO $db, DepotExecution $depot): array
 {
+    // Vérification quota
+    if (class_exists('\\Platform\\Module\\Quota')) {
+        if (!\Platform\Module\Quota::creditsDisponibles('site-monitor')) {
+            http_response_code(429);
+            return ['erreur' => 'Crédits épuisés'];
+        }
+    }
+
     $clientId = (int) ($_POST['client_id'] ?? 0);
     $groupeId = isset($_POST['groupe_id']) ? (int) $_POST['groupe_id'] : null;
 
@@ -1047,6 +1055,14 @@ function gererIndexation(\PDO $db, string $action, ?int $utilisateurId): array
 
 function lancerAuditIndexation(\PDO $db, DepotAuditIndexation $depotAudit, ?int $utilisateurId): array
 {
+    // Vérification quota
+    if (class_exists('\\Platform\\Module\\Quota')) {
+        if (!\Platform\Module\Quota::creditsDisponibles('site-monitor')) {
+            http_response_code(429);
+            return ['erreur' => 'Crédits épuisés'];
+        }
+    }
+
     $domaine = trim($_POST['domaine'] ?? '');
     $urlsTexte = trim($_POST['urls'] ?? '');
     $clientId = isset($_POST['client_id']) && $_POST['client_id'] !== ''
