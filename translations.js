@@ -299,6 +299,11 @@ var TRANSLATIONS = {
         'modal.url.modelesAide': 'Selectionnez les modeles de verification a appliquer',
         'modal.url.aucunModele': 'Aucun modele disponible',
         'modal.url.actif': 'Actif',
+        'modal.url.ajoutMultiple': 'Ajouter plusieurs URLs',
+        'modal.url.ajoutSimple': 'Ajout simple',
+        'modal.url.urlsTextarea': 'URLs (une par ligne)',
+        'modal.url.urlsDetectees': 'URLs detectees',
+        'modal.url.urlsAjoutees': 'URLs ajoutees',
 
         // Modal modele
         'modal.modele.titre': 'Modele de verification',
@@ -716,6 +721,11 @@ var TRANSLATIONS = {
         'modal.url.modelesAide': 'Select verification templates to apply',
         'modal.url.aucunModele': 'No templates available',
         'modal.url.actif': 'Active',
+        'modal.url.ajoutMultiple': 'Add multiple URLs',
+        'modal.url.ajoutSimple': 'Single add',
+        'modal.url.urlsTextarea': 'URLs (one per line)',
+        'modal.url.urlsDetectees': 'URLs detected',
+        'modal.url.urlsAjoutees': 'URLs added',
 
         // Template modal
         'modal.modele.titre': 'Verification template',

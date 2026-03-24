@@ -580,6 +580,16 @@ function reinitialiserFormUrl() {
     document.getElementById('urlId').value = '';
     document.getElementById('urlActif').checked = true;
     document.getElementById('modalUrlLabel').textContent = t('url.ajouter', 'Ajouter une URL');
+
+    // Revenir en mode simple
+    document.getElementById('blocUrlSimple').style.display = '';
+    document.getElementById('blocUrlMultiple').style.display = 'none';
+    document.getElementById('blocToggleUrlMode').style.display = '';
+    document.getElementById('urlsTextarea').value = '';
+    document.getElementById('urlsCompteur').textContent = '0';
+    const toggle = document.getElementById('toggleUrlMode');
+    toggle.querySelector('span').textContent = t('modal.url.ajoutMultiple', 'Ajouter plusieurs URLs');
+    toggle.dataset.mode = 'simple';
 }
 
 async function ouvrirAjoutUrl(groupeId) {
@@ -629,6 +639,11 @@ async function ouvrirEditionUrl(id) {
         document.getElementById('urlActif').checked = !!u.actif;
         document.getElementById('modalUrlLabel').textContent = t('url.modifier', 'Modifier l\'URL');
 
+        // Masquer le toggle et forcer mode simple en edition
+        document.getElementById('blocToggleUrlMode').style.display = 'none';
+        document.getElementById('blocUrlSimple').style.display = '';
+        document.getElementById('blocUrlMultiple').style.display = 'none';
+
         await chargerCheckboxesModeles(u.modeles || []);
 
         const modal = bootstrap.Modal.getOrCreateInstance(document.getElementById('modalUrl'));
@@ -675,6 +690,38 @@ async function chargerCheckboxesModeles(modelesCoches) {
 async function sauvegarderUrl(e) {
     e.preventDefault();
     const id = document.getElementById('urlId').value;
+    const modeMultiple = document.getElementById('toggleUrlMode')?.dataset.mode === 'multiple';
+
+    // Mode multiple : ajout en lot
+    if (!id && modeMultiple) {
+        const urls = document.getElementById('urlsTextarea').value.trim();
+        if (!urls) {
+            afficherToast(t('modal.url.urlsTextarea', 'Saisissez au moins une URL'), 'warning');
+            return;
+        }
+        try {
+            const res = await apiPost({
+                entite: 'url',
+                action: 'creer_lot',
+                groupe_id: document.getElementById('urlGroupeId').value,
+                urls: urls,
+            });
+            if (res.erreur) {
+                afficherToast(res.erreur, 'danger');
+                return;
+            }
+            afficherToast(res.message || t('modal.url.urlsAjoutees', 'URLs ajoutees'), 'success');
+            bootstrap.Modal.getInstance(document.getElementById('modalUrl'))?.hide();
+            if (detailClientActuelId) await chargerUrlsDetail(detailClientActuelId);
+            chargerDashboard();
+        } catch (err) {
+            console.error('sauvegarderUrl (lot):', err);
+            afficherToast(t('message.erreur'), 'danger');
+        }
+        return;
+    }
+
+    // Mode simple : creation ou edition unitaire
     const action = id ? 'modifier' : 'creer';
     const donnees = {
         entite: 'url',
@@ -1645,6 +1692,33 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('formUrl').addEventListener('submit', sauvegarderUrl);
     document.getElementById('modalUrl').addEventListener('hidden.bs.modal', () => {
         reinitialiserFormUrl();
+    });
+
+    // Toggle mode simple/multiple URLs
+    document.getElementById('toggleUrlMode').addEventListener('click', (e) => {
+        e.preventDefault();
+        const toggle = e.currentTarget;
+        const simple = document.getElementById('blocUrlSimple');
+        const multiple = document.getElementById('blocUrlMultiple');
+        if (toggle.dataset.mode === 'simple') {
+            toggle.dataset.mode = 'multiple';
+            toggle.querySelector('span').textContent = t('modal.url.ajoutSimple', 'Ajout simple');
+            toggle.querySelector('i').className = 'bi bi-pencil me-1';
+            simple.style.display = 'none';
+            multiple.style.display = '';
+        } else {
+            toggle.dataset.mode = 'simple';
+            toggle.querySelector('span').textContent = t('modal.url.ajoutMultiple', 'Ajouter plusieurs URLs');
+            toggle.querySelector('i').className = 'bi bi-list-ul me-1';
+            simple.style.display = '';
+            multiple.style.display = 'none';
+        }
+    });
+
+    // Compteur d'URLs dans le textarea
+    document.getElementById('urlsTextarea').addEventListener('input', (e) => {
+        const lignes = e.target.value.split('\n').filter(l => l.trim() !== '');
+        document.getElementById('urlsCompteur').textContent = lignes.length;
     });
 
     // Modele

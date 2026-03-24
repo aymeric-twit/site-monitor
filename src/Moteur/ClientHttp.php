@@ -59,7 +59,8 @@ final class ClientHttp
     public function recuperer(string $url): ContexteVerification
     {
         // Mode plateforme : utiliser le WebClient centralise
-        if (defined('PLATFORM_EMBEDDED') && class_exists(\Platform\Http\WebClient::class)) {
+        // PLATFORM_EMBEDDED (pages), PLATFORM_DOMAIN (routes ajax/passthrough)
+        if ((defined('PLATFORM_EMBEDDED') || defined('PLATFORM_DOMAIN')) && class_exists(\Platform\Http\WebClient::class)) {
             return $this->recupererViaPlateforme($url);
         }
 
@@ -200,7 +201,7 @@ final class ClientHttp
     public function testerAccessibilite(string $url): array
     {
         // Mode plateforme : utiliser le WebClient centralise
-        if (defined('PLATFORM_EMBEDDED') && class_exists(\Platform\Http\WebClient::class)) {
+        if ((defined('PLATFORM_EMBEDDED') || defined('PLATFORM_DOMAIN')) && class_exists(\Platform\Http\WebClient::class)) {
             try {
                 $webClient = new \Platform\Http\WebClient('site-monitor');
                 $reponse = $webClient->head($url);

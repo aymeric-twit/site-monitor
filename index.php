@@ -690,29 +690,51 @@
                 <div class="modal-body">
                     <input type="hidden" id="urlId" name="id" value="">
                     <input type="hidden" id="urlGroupeId" name="groupe_id" value="">
-                    <div class="mb-3">
-                        <label for="urlAdresse" class="form-label" data-i18n="modal.url.adresse">URL</label>
-                        <input type="url" class="form-control" id="urlAdresse" name="url" required maxlength="2048" placeholder="https://www.example.com/page">
+
+                    <!-- Toggle mode simple / multiple -->
+                    <div class="mb-3" id="blocToggleUrlMode">
+                        <a href="#" id="toggleUrlMode" class="small text-decoration-none">
+                            <i class="bi bi-list-ul me-1"></i><span data-i18n="modal.url.ajoutMultiple">Ajouter plusieurs URLs</span>
+                        </a>
                     </div>
-                    <div class="mb-3">
-                        <label for="urlLibelle" class="form-label" data-i18n="modal.url.libelle">Libelle</label>
-                        <input type="text" class="form-control" id="urlLibelle" name="libelle" maxlength="255" placeholder="Page d'accueil">
-                        <div class="form-text" data-i18n="modal.url.libelleAide">Nom court pour identifier la page</div>
-                    </div>
-                    <div class="mb-3">
-                        <label for="urlNotes" class="form-label" data-i18n="modal.url.notes">Notes</label>
-                        <textarea class="form-control" id="urlNotes" name="notes" rows="2" placeholder="Remarques ou contexte supplementaire..."></textarea>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label" data-i18n="modal.url.modeles">Modeles de verification associes</label>
-                        <div id="urlModelesCheckboxes" class="d-flex flex-wrap gap-2">
-                            <span class="text-muted small" data-i18n="modal.url.aucunModele">Aucun modele disponible</span>
+
+                    <!-- Mode simple (defaut) -->
+                    <div id="blocUrlSimple">
+                        <div class="mb-3">
+                            <label for="urlAdresse" class="form-label" data-i18n="modal.url.adresse">URL</label>
+                            <input type="url" class="form-control" id="urlAdresse" name="url" maxlength="2048" placeholder="https://www.example.com/page">
                         </div>
-                        <div class="form-text" data-i18n="modal.url.modelesAide">Selectionnez les modeles a appliquer lors des verifications</div>
+                        <div class="mb-3">
+                            <label for="urlLibelle" class="form-label" data-i18n="modal.url.libelle">Libelle</label>
+                            <input type="text" class="form-control" id="urlLibelle" name="libelle" maxlength="255" placeholder="Page d'accueil">
+                            <div class="form-text" data-i18n="modal.url.libelleAide">Nom court pour identifier la page</div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="urlNotes" class="form-label" data-i18n="modal.url.notes">Notes</label>
+                            <textarea class="form-control" id="urlNotes" name="notes" rows="2" placeholder="Remarques ou contexte supplementaire..."></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label" data-i18n="modal.url.modeles">Modeles de verification associes</label>
+                            <div id="urlModelesCheckboxes" class="d-flex flex-wrap gap-2">
+                                <span class="text-muted small" data-i18n="modal.url.aucunModele">Aucun modele disponible</span>
+                            </div>
+                            <div class="form-text" data-i18n="modal.url.modelesAide">Selectionnez les modeles a appliquer lors des verifications</div>
+                        </div>
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="urlActif" name="actif" checked>
+                            <label class="form-check-label" for="urlActif" data-i18n="modal.url.actif">URL active</label>
+                        </div>
                     </div>
-                    <div class="form-check form-switch">
-                        <input class="form-check-input" type="checkbox" id="urlActif" name="actif" checked>
-                        <label class="form-check-label" for="urlActif" data-i18n="modal.url.actif">URL active</label>
+
+                    <!-- Mode multiple (masque par defaut) -->
+                    <div id="blocUrlMultiple" style="display:none;">
+                        <div class="mb-3">
+                            <label for="urlsTextarea" class="form-label" data-i18n="modal.url.urlsTextarea">URLs (une par ligne)</label>
+                            <textarea class="form-control font-monospace" id="urlsTextarea" rows="10" placeholder="https://www.example.com/page1&#10;https://www.example.com/page2&#10;https://www.example.com/page3"></textarea>
+                            <div class="form-text">
+                                <span id="urlsCompteur" class="fw-semibold">0</span> <span data-i18n="modal.url.urlsDetectees">URLs detectees</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
                 <div class="modal-footer">

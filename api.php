@@ -266,6 +266,7 @@ function gererUrls(\PDO $db, string $action): array
         'lister' => listerUrls($depot),
         'obtenir' => obtenirUrl($depot),
         'creer' => creerUrl($depot),
+        'creer_lot' => creerUrlsEnLot($depot),
         'modifier' => modifierUrl($depot),
         'supprimer' => supprimerUrl($depot),
         'associer_modele' => associerModeleUrl($depot),
@@ -325,6 +326,50 @@ function creerUrl(DepotUrl $depot): array
 
     $id = $depot->creer($url);
     return ['donnees' => ['id' => $id], 'message' => 'URL creee'];
+}
+
+function creerUrlsEnLot(DepotUrl $depot): array
+{
+    $groupeId = (int) ($_POST['groupe_id'] ?? 0);
+    $urlsTexte = trim($_POST['urls'] ?? '');
+    if ($groupeId <= 0 || $urlsTexte === '') {
+        return ['erreur' => 'groupe_id et urls requis'];
+    }
+
+    $lignes = array_filter(array_map('trim', explode("\n", $urlsTexte)), fn(string $l): bool => $l !== '');
+    $dejaVues = [];
+    $creees = 0;
+    $ignorees = 0;
+
+    foreach ($lignes as $ligne) {
+        // Normaliser : retirer les espaces, tabulations
+        $urlStr = preg_replace('/\s+/', '', $ligne);
+        if ($urlStr === '' || isset($dejaVues[$urlStr])) {
+            $ignorees++;
+            continue;
+        }
+        $dejaVues[$urlStr] = true;
+
+        $url = new Url(
+            id: null,
+            groupeId: $groupeId,
+            url: $urlStr,
+            libelle: null,
+            actif: true,
+            derniereVerification: null,
+            dernierStatut: null,
+            notes: null,
+            creeLe: null,
+            modifieLe: null,
+        );
+        $depot->creer($url);
+        $creees++;
+    }
+
+    return [
+        'donnees' => ['creees' => $creees, 'ignorees' => $ignorees],
+        'message' => "{$creees} URL(s) ajoutee(s)",
+    ];
 }
 
 function modifierUrl(DepotUrl $depot): array
