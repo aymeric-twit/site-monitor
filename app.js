@@ -1440,11 +1440,15 @@ function demarrerPolling(jobId) {
     const section = document.getElementById('progressSection');
     const bar = document.getElementById('progressBar');
     const status = document.getElementById('progressStatus');
+    const logs = document.getElementById('progressLogs');
 
     section.style.display = '';
     bar.style.width = '0%';
     bar.textContent = '0%';
     status.textContent = t('statut.en_attente', 'En attente...');
+    logs.style.display = '';
+    logs.innerHTML = '';
+    _lastLogStep = '';
 
     // Arreter un polling precedent
     if (pollingInterval) clearInterval(pollingInterval);
@@ -1453,25 +1457,37 @@ function demarrerPolling(jobId) {
         try {
             const response = await fetch(baseUrl + '/progress.php?job=' + encodeURIComponent(jobId));
             if (!response.ok) {
+                ajouterLog('Erreur HTTP ' + response.status, 'danger');
                 arreterPolling(t('message.erreur', 'Erreur'));
                 return;
             }
 
             const data = await response.json();
             const pct = data.percent || 0;
+            const step = data.step || data.status || '';
 
             bar.style.width = pct + '%';
             bar.textContent = pct + '%';
-            status.textContent = data.step || data.status || '';
+            status.textContent = step;
+
+            // Ajouter au log si le message a change
+            if (step && step !== _lastLogStep) {
+                const couleur = data.status === 'error' ? 'text-danger' : (pct >= 95 ? 'text-success' : 'text-info');
+                ajouterLog('[' + pct + '%] ' + step, couleur);
+                _lastLogStep = step;
+            }
 
             if (data.status === 'done' || data.status === 'completed' || data.status === 'error' || pct >= 100) {
-                arreterPolling(data.step || data.status);
-
                 if (data.status === 'error') {
+                    ajouterLog('ERREUR : ' + (data.step || 'Erreur inconnue'), 'text-danger');
                     afficherToast(data.step || t('message.erreur'), 'danger');
                 } else {
+                    const r = data.resume || data.result || {};
+                    ajouterLog('Termine — ' + (r.urls_traitees || '?') + ' URLs, ' + (r.succes || 0) + ' succes, ' + (r.echecs || 0) + ' echecs (' + (r.duree_ms || 0) + 'ms)', 'text-success');
                     afficherToast(t('message.succes', 'Verification terminee'), 'success');
                 }
+
+                arreterPolling(data.step || data.status);
 
                 // Rafraichir les donnees
                 chargerDashboard();
@@ -1484,9 +1500,22 @@ function demarrerPolling(jobId) {
 
         } catch (e) {
             console.error('polling:', e);
+            ajouterLog('Erreur reseau : ' + e.message, 'text-danger');
             arreterPolling(t('message.erreur_reseau'));
         }
     }, 2000);
+}
+
+let _lastLogStep = '';
+function ajouterLog(message, couleurClass) {
+    const logs = document.getElementById('progressLogs');
+    if (!logs) return;
+    const horodatage = new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    const ligne = document.createElement('div');
+    ligne.className = couleurClass || '';
+    ligne.textContent = horodatage + '  ' + message;
+    logs.appendChild(ligne);
+    logs.scrollTop = logs.scrollHeight;
 }
 
 function arreterPolling(messageFinal) {
@@ -1499,13 +1528,14 @@ function arreterPolling(messageFinal) {
     bar.classList.remove('progress-bar-animated');
     if (messageFinal) status.textContent = messageFinal;
 
-    // Masquer apres 5 secondes
+    // Masquer apres 30 secondes (laisser le temps de lire les logs)
     setTimeout(() => {
         document.getElementById('progressSection').style.display = 'none';
+        document.getElementById('progressLogs').innerHTML = '';
         bar.classList.add('progress-bar-animated');
         bar.style.width = '0%';
         bar.textContent = '0%';
-    }, 5000);
+    }, 30000);
 }
 
 // ---------------------------------------------------------------------------

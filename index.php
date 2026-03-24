@@ -45,6 +45,7 @@
                 <div id="progressBar" class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width:0%;">0%</div>
             </div>
             <p class="mb-0 small text-muted" id="progressStatus" data-i18n="progres.enAttente">En attente...</p>
+            <div id="progressLogs" class="mt-3 p-2 bg-dark text-light rounded font-monospace small" style="max-height:200px; overflow-y:auto; display:none; font-size:0.75rem; line-height:1.4;"></div>
         </div>
     </div>
 
