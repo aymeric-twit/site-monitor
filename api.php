@@ -710,7 +710,9 @@ function lancerExecution(\PDO $db, DepotExecution $depot): array
         mkdir($dossierJob, 0755, true);
     }
 
-    // Sauver la config du job
+    // Sauver la config du job avec les infos de connexion DB
+    // Le worker est lance en CLI sans contexte plateforme :
+    // il a besoin des credentials DB pour se connecter a MySQL
     $configJob = [
         'client_id' => $clientId,
         'groupe_id' => $groupeId,
@@ -718,6 +720,24 @@ function lancerExecution(\PDO $db, DepotExecution $depot): array
         'timeout' => (int) ($_POST['timeout'] ?? 30),
         'delai_entre_requetes_ms' => (int) ($_POST['delai_ms'] ?? 1000),
     ];
+
+    // Propager les infos DB de la plateforme vers le worker CLI
+    $pilote = $db->getAttribute(\PDO::ATTR_DRIVER_NAME);
+    if ($pilote === 'mysql') {
+        // Extraire host/dbname depuis le DSN
+        $dsn = '';
+        try {
+            $dsn = $db->getAttribute(\PDO::ATTR_CONNECTION_STATUS) ?: '';
+        } catch (\Throwable) {}
+        $configJob['db'] = [
+            'type' => 'mysql',
+            'host' => $_ENV['DB_HOST'] ?? getenv('DB_HOST') ?: '127.0.0.1',
+            'port' => $_ENV['DB_PORT'] ?? getenv('DB_PORT') ?: '3306',
+            'name' => $_ENV['DB_NAME'] ?? getenv('DB_NAME') ?: '',
+            'user' => $_ENV['DB_USER'] ?? getenv('DB_USER') ?: 'root',
+            'pass' => $_ENV['DB_PASSWORD'] ?? getenv('DB_PASSWORD') ?: '',
+        ];
+    }
 
     file_put_contents(
         $dossierJob . '/config.json',

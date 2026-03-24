@@ -86,11 +86,32 @@ if (isset($options['job'])) {
     $progression->avancer(0, 'Initialisation...');
 
     try {
+        // Si la config contient les credentials DB (lance depuis la plateforme),
+        // injecter la connexion MySQL avant d'appeler Connexion::obtenir()
+        if (isset($configJob['db']) && $configJob['db']['type'] === 'mysql') {
+            $dbConf = $configJob['db'];
+            $dsn = sprintf(
+                'mysql:host=%s;port=%s;dbname=%s;charset=utf8mb4',
+                $dbConf['host'], $dbConf['port'], $dbConf['name']
+            );
+            $pdo = new \PDO($dsn, $dbConf['user'], $dbConf['pass'], [
+                \PDO::ATTR_ERRMODE => \PDO::ERRMODE_EXCEPTION,
+                \PDO::ATTR_DEFAULT_FETCH_MODE => \PDO::FETCH_ASSOC,
+                \PDO::ATTR_EMULATE_PREPARES => false,
+            ]);
+            Connexion::definir($pdo);
+            logWorker('Connexion MySQL injectee depuis config job.', quiet: $quiet);
+        }
+
         $db = Connexion::obtenir();
 
         // S'assurer que les tables existent
-        $migrateur = new Migrateur($db);
-        $migrateur->migrer();
+        try {
+            $migrateur = new Migrateur($db);
+            $migrateur->migrer();
+        } catch (\Throwable $eMigration) {
+            logWorker('Migration non-bloquante : ' . $eMigration->getMessage(), quiet: $quiet);
+        }
 
         $progression->avancer(5, 'Connexion base de donnees OK');
 
