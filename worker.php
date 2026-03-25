@@ -166,6 +166,13 @@ if (isset($options['job'])) {
 
         // Configurer le client HTTP
         $clientHttp = new ClientHttp();
+        if (isset($configJob['crawler_mode'])) {
+            $clientHttp->definirCrawlerMode(
+                $configJob['crawler_mode'],
+                $configJob['go_proxy_url'] ?? ''
+            );
+            $progression->avancer(10, 'Crawler mode : ' . $configJob['crawler_mode']);
+        }
         if (isset($configJob['user_agent'])) {
             $clientHttp->definirUserAgent($configJob['user_agent']);
         }

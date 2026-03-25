@@ -721,6 +721,15 @@ function lancerExecution(\PDO $db, DepotExecution $depot): array
         'delai_entre_requetes_ms' => (int) ($_POST['delai_ms'] ?? 1000),
     ];
 
+    // Lire le crawler_mode depuis module.json
+    $moduleJson = __DIR__ . '/module.json';
+    if (file_exists($moduleJson)) {
+        $moduleConfig = json_decode(file_get_contents($moduleJson), true);
+        if (!empty($moduleConfig['crawler_mode'])) {
+            $configJob['crawler_mode'] = $moduleConfig['crawler_mode'];
+        }
+    }
+
     // Propager les infos DB de la plateforme vers le worker CLI
     $pilote = $db->getAttribute(\PDO::ATTR_DRIVER_NAME);
     if ($pilote === 'mysql') {

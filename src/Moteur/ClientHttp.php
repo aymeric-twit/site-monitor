@@ -19,6 +19,9 @@ final class ClientHttp
     private int $maxRedirections = 10;
     private array $headersSupplementaires = [];
     private bool $suivreRedirections = true;
+    private string $crawlerMode = 'php';
+    private string $goProxyUrl = 'http://127.0.0.1:8976';
+    private string $goTlsProfile = 'chrome';
 
     public function definirUserAgent(string $ua): self
     {
@@ -53,13 +56,26 @@ final class ClientHttp
         return $this;
     }
 
+    public function definirCrawlerMode(string $mode, string $goProxyUrl = ''): self
+    {
+        $this->crawlerMode = $mode;
+        if ($goProxyUrl !== '') {
+            $this->goProxyUrl = $goProxyUrl;
+        }
+        return $this;
+    }
+
     /**
      * Execute une requete GET et retourne un ContexteVerification complet.
      */
     public function recuperer(string $url): ContexteVerification
     {
+        // Mode Go proxy : utiliser le service crawl-proxy (TLS fingerprinting)
+        if ($this->crawlerMode === 'go') {
+            return $this->recupererViaGoProxy($url);
+        }
+
         // Mode plateforme : utiliser le WebClient centralise
-        // PLATFORM_EMBEDDED (pages), PLATFORM_DOMAIN (routes ajax/passthrough)
         if ((defined('PLATFORM_EMBEDDED') || defined('PLATFORM_DOMAIN')) && class_exists(\Platform\Http\WebClient::class)) {
             return $this->recupererViaPlateforme($url);
         }
@@ -114,6 +130,98 @@ final class ClientHttp
                 metriquesPerformance: ['erreur_plateforme' => $e->getMessage()],
             );
         }
+    }
+
+    /**
+     * Recuperation via le service Go crawl-proxy (TLS fingerprinting).
+     */
+    private function recupererViaGoProxy(string $url): ContexteVerification
+    {
+        try {
+            $payload = json_encode([
+                'url' => $url,
+                'tls_profile' => $this->goTlsProfile,
+                'follow_redirects' => $this->suivreRedirections,
+                'max_redirects' => $this->maxRedirections,
+                'timeout' => $this->timeoutSecondes,
+                'headers' => !empty($this->headersSupplementaires) ? $this->headersSupplementaires : new \stdClass(),
+            ], JSON_UNESCAPED_SLASHES);
+
+            $ch = curl_init();
+            curl_setopt_array($ch, [
+                CURLOPT_URL => $this->goProxyUrl . '/fetch',
+                CURLOPT_POST => true,
+                CURLOPT_POSTFIELDS => $payload,
+                CURLOPT_HTTPHEADER => ['Content-Type: application/json'],
+                CURLOPT_RETURNTRANSFER => true,
+                CURLOPT_TIMEOUT => $this->timeoutSecondes + 10,
+                CURLOPT_CONNECTTIMEOUT => 5,
+            ]);
+
+            $reponse = curl_exec($ch);
+            $erreurCurl = curl_error($ch);
+            curl_close($ch);
+
+            if ($reponse === false || $reponse === '') {
+                return $this->contexteErreur($url, 'Go proxy inaccessible : ' . ($erreurCurl ?: 'reponse vide'));
+            }
+
+            $data = json_decode($reponse, true);
+            if (!is_array($data)) {
+                return $this->contexteErreur($url, 'Go proxy reponse invalide');
+            }
+
+            // Verifier si le proxy a retourne une erreur
+            if (isset($data['error']) && $data['error'] !== '') {
+                return $this->contexteErreur($url, 'Go proxy : ' . $data['error']);
+            }
+
+            $timings = $data['timings'] ?? [];
+
+            // Recuperer les infos SSL via cURL (le proxy Go ne les expose pas en detail)
+            $infosSsl = $this->extraireInfosSslDepuisUrl($url);
+
+            return new ContexteVerification(
+                url: $url,
+                codeHttp: (int) ($data['status_code'] ?? 0),
+                enTetes: $data['headers'] ?? [],
+                corpsReponse: $data['body'] ?? '',
+                tempsTotalMs: (float) ($timings['total_ms'] ?? 0),
+                ttfbMs: (float) ($timings['ttfb_ms'] ?? 0),
+                tempsDnsMs: (float) ($timings['dns_ms'] ?? 0),
+                tempsConnexionMs: (float) ($timings['connect_ms'] ?? 0),
+                tempsHandshakeSslMs: (float) ($timings['tls_ms'] ?? 0),
+                tailleOctets: (int) ($data['taille_octets'] ?? strlen($data['body'] ?? '')),
+                urlFinale: ($data['url_finale'] ?? $url) !== $url ? $data['url_finale'] : null,
+                nombreRedirections: 0,
+                infosSsl: $infosSsl,
+            );
+        } catch (\Throwable $e) {
+            return $this->contexteErreur($url, 'Go proxy exception : ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Cree un ContexteVerification d'erreur.
+     */
+    private function contexteErreur(string $url, string $message): ContexteVerification
+    {
+        return new ContexteVerification(
+            url: $url,
+            codeHttp: 0,
+            enTetes: [],
+            corpsReponse: '',
+            tempsTotalMs: 0,
+            ttfbMs: 0,
+            tempsDnsMs: 0,
+            tempsConnexionMs: 0,
+            tempsHandshakeSslMs: 0,
+            tailleOctets: 0,
+            urlFinale: null,
+            nombreRedirections: 0,
+            infosSsl: null,
+            metriquesPerformance: ['erreur' => $message],
+        );
     }
 
     /**
