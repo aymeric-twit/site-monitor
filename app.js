@@ -54,26 +54,17 @@ async function chargerDashboard() {
         }
         const d = res.donnees;
 
-        // KPIs existants
+        // KPIs compacts (3 seulement)
         document.getElementById('kpiClientsActifs').textContent = d.stats_clients?.actifs ?? 0;
         document.getElementById('kpiUrlsSurveillees').textContent = d.stats_executions?.urls_surveillees ?? 0;
-        document.getElementById('kpiExecutions24h').textContent = d.stats_executions?.executions_24h ?? 0;
-
         const taux = d.stats_executions?.taux_reussite;
         document.getElementById('kpiTauxReussite').textContent = taux !== null && taux !== undefined ? taux + '%' : '\u2014';
 
-        // KPIs enrichis
-        const scoreSante = d.score_sante_global;
-        document.getElementById('kpiScoreSante').textContent = scoreSante !== null && scoreSante !== undefined ? scoreSante + '%' : '--';
-        document.getElementById('kpiChangementsDetectes').textContent = d.changements_detectes ?? 0;
-        document.getElementById('kpiAlertesCritiques').textContent = d.alertes_critiques ?? 0;
-
-        // Table des clients — normaliser les cles (dashboard retourne client_id, pas id)
+        // Cache clients
         cacheClients = (d.clients || []).map(c => ({
             ...c,
             id: c.id ?? c.client_id,
         }));
-        renderClientsTable(cacheClients);
 
         // Remplir les selects client dans les modales + filtre tendances
         remplirSelectsClient(cacheClients);
@@ -88,15 +79,12 @@ async function chargerDashboard() {
         renderAlertesRecentes(d.alertes_recentes || []);
         mettreAJourBadgeAlertes(d.alertes_non_lues || 0);
 
-        // Charger les sections avancees en parallele (seulement si des clients existent)
+        // Charger les sections en parallele
+        const promesses = [chargerChangementsFeed()];
         if (!aucunClient) {
-            Promise.all([
-                chargerSanteParClient(),
-                chargerUrlsARisque(),
-                chargerChangementsRecents(),
-                chargerTendances(),
-            ]);
+            promesses.push(chargerSanteParClient(), chargerTendances());
         }
+        Promise.all(promesses);
 
     } catch (e) {
         console.error('chargerDashboard:', e);
@@ -1900,6 +1888,15 @@ document.addEventListener('DOMContentLoaded', async () => {
         trierCartesClients(btn.dataset.tri);
     });
 
+    // --- Feed "Quoi de neuf ?" : onglets ---
+    document.getElementById('filtreChangementsFeed')?.addEventListener('click', (e) => {
+        const btn = e.target.closest('[data-filtre]');
+        if (!btn) return;
+        document.querySelectorAll('#filtreChangementsFeed .btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        renderChangementsFeed(btn.dataset.filtre);
+    });
+
     // --- Dashboard avance : filtre tendances par client ---
 
     document.getElementById('filtreTendancesClient')?.addEventListener('change', (e) => {
@@ -2152,43 +2149,92 @@ async function chargerUrlsARisque() {
 /**
  * Charge les changements de contenu recents.
  */
-async function chargerChangementsRecents() {
+// ---------------------------------------------------------------------------
+// Feed "Quoi de neuf ?" — comparaison entre 2 dernieres executions
+// ---------------------------------------------------------------------------
+
+let cacheChangementsFeed = null;
+
+async function chargerChangementsFeed() {
     try {
-        const res = await apiGet({ entite: 'dashboard', action: 'changements_recents' });
-        if (res.erreur) return;
-
-        const changements = res.donnees || [];
-        const card = document.getElementById('cardChangements');
-        const conteneur = document.getElementById('listeChangements');
-
-        if (changements.length === 0) {
-            card.style.display = 'none';
+        const res = await apiGet({ entite: 'dashboard', action: 'changements_feed' });
+        if (res.erreur) {
+            console.warn('changements_feed:', res.erreur);
             return;
         }
 
-        card.style.display = '';
-        conteneur.innerHTML = changements.map(c => {
-            const urlTronquee = (c.url || '').length > 50 ? c.url.substring(0, 50) + '...' : c.url;
-            const date = tempsRelatif(c.date_execution);
-            return `
-                <div class="changement-item">
-                    <div class="changement-icone"><i class="bi bi-arrow-left-right"></i></div>
-                    <div class="changement-contenu">
-                        <div class="changement-url" title="${echapper(c.url)}">${echapper(c.libelle || urlTronquee)}</div>
-                        <div class="changement-meta">
-                            <strong>${echapper(c.client_nom || '')}</strong> &middot;
-                            ${echapper((c.message || '').substring(0, 120))} &middot;
-                            <span class="badge-severite severite-${c.severite || 'erreur'}">${c.severite || 'erreur'}</span> &middot;
-                            ${date}
-                        </div>
-                    </div>
-                </div>
-            `;
-        }).join('');
+        cacheChangementsFeed = res.donnees;
+        const r = res.donnees.resume || {};
 
+        document.getElementById('countNouvelles').textContent = r.nb_nouvelles || 0;
+        document.getElementById('countRecuperations').textContent = r.nb_recuperations || 0;
+        document.getElementById('countPersistantes').textContent = r.nb_persistantes || 0;
+        document.getElementById('badgeNbChangements').textContent = (r.nb_nouvelles || 0) + (r.nb_recuperations || 0);
+
+        renderChangementsFeed('nouvelles');
     } catch (e) {
-        console.error('chargerChangementsRecents:', e);
+        console.error('chargerChangementsFeed:', e);
     }
+}
+
+function renderChangementsFeed(filtre) {
+    if (!cacheChangementsFeed) return;
+
+    const cle = filtre === 'nouvelles' ? 'nouvelles_defaillances'
+        : filtre === 'recuperations' ? 'recuperations'
+        : 'defaillances_persistantes';
+
+    const items = cacheChangementsFeed[cle] || [];
+    const corps = document.getElementById('corpsChangementsFeed');
+    const feedVide = document.getElementById('feedVide');
+
+    if (items.length === 0) {
+        corps.innerHTML = '';
+        feedVide.style.display = '';
+        return;
+    }
+    feedVide.style.display = 'none';
+
+    // Grouper par client
+    const parClient = {};
+    items.forEach(item => {
+        const key = item.client_nom || 'Inconnu';
+        if (!parClient[key]) parClient[key] = [];
+        parClient[key].push(item);
+    });
+
+    const icones = {
+        nouvelles: 'bi-exclamation-triangle',
+        recuperations: 'bi-check-circle',
+        persistantes: 'bi-arrow-repeat',
+    };
+    const icone = icones[filtre] || 'bi-arrow-left-right';
+
+    let html = '';
+    for (const [clientNom, clientItems] of Object.entries(parClient)) {
+        html += `<div class="feed-groupe-client"><i class="bi bi-building me-1"></i>${echapper(clientNom)}</div>`;
+        clientItems.forEach(item => {
+            const urlAffichee = item.url_libelle || (item.url?.length > 60 ? item.url.substring(0, 60) + '...' : item.url);
+            const meta = [
+                item.regle_type || item.regle_nom,
+                (item.message || '').substring(0, 100),
+            ].filter(Boolean).join(' \u00b7 ');
+
+            html += `
+                <div class="feed-item feed-${filtre}">
+                    <div class="feed-icone feed-icone-${filtre}"><i class="bi ${icone}"></i></div>
+                    <div class="feed-contenu">
+                        <div class="feed-url" title="${echapper(item.url || '')}">${echapper(urlAffichee)}</div>
+                        <div class="feed-meta">${echapper(meta)}</div>
+                    </div>
+                    <div class="feed-badges">
+                        <span class="badge-severite severite-${item.severite || 'erreur'}">${t('severite.' + (item.severite || 'erreur'))}</span>
+                    </div>
+                </div>`;
+        });
+    }
+
+    corps.innerHTML = html;
 }
 
 /**

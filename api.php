@@ -41,6 +41,7 @@ use SiteMonitor\Stockage\DepotResultatRegle;
 use SiteMonitor\Stockage\DepotSnapshot;
 use SiteMonitor\Stockage\DepotUrl;
 use SiteMonitor\Moteur\RegistreTemplates;
+use SiteMonitor\Moteur\ComparateurExecutions;
 
 try {
     $db = Connexion::obtenir();
@@ -823,6 +824,7 @@ function genererDashboard(\PDO $db, string $action, ?int $utilisateurId): array
         'stats_par_client' => genererStatsParClient($db, $utilisateurId),
         'urls_a_risque' => genererUrlsARisque($db),
         'changements_recents' => genererChangementsRecents($db),
+        'changements_feed' => genererChangementsFeed($db, $utilisateurId),
         'tendances' => genererTendances($db),
         default => ['erreur' => "Action dashboard inconnue : {$action}"],
     };
@@ -920,6 +922,84 @@ function genererChangementsRecents(\PDO $db): array
 {
     $depot = new DepotResultatRegle($db);
     return ['donnees' => $depot->changementsRecents()];
+}
+
+function genererChangementsFeed(\PDO $db, ?int $utilisateurId): array
+{
+    $depotClient = new DepotClient($db);
+    $depotExecution = new DepotExecution($db);
+    $depotResultat = new DepotResultatRegle($db);
+    $depotUrl = new DepotUrl($db);
+    $depotRegle = new DepotRegle($db);
+    $comparateur = new ComparateurExecutions();
+
+    $clients = array_map(
+        fn($c) => $c->versTableau(),
+        $depotClient->trouverTous(actifsUniquement: true, utilisateurId: $utilisateurId)
+    );
+
+    $nouvelles = [];
+    $recuperations = [];
+    $persistantes = [];
+
+    foreach ($clients as $client) {
+        $clientId = (int) ($client['id'] ?? $client['client_id'] ?? 0);
+        $clientNom = $client['nom'] ?? 'Client';
+
+        // Trouver les 2 dernieres executions terminees pour ce client
+        $executions = $depotExecution->trouverParClient($clientId, 2);
+        $execTerminees = array_filter($executions, fn($e) => $e->statut === StatutExecution::Termine);
+        $execTerminees = array_values($execTerminees);
+
+        if (count($execTerminees) < 2) {
+            continue;
+        }
+
+        $actuelle = $execTerminees[0];
+        $precedente = $execTerminees[1];
+
+        $resultatsActuels = $depotResultat->trouverParExecution($actuelle->id);
+        $resultatsPrecedents = $depotResultat->trouverParExecution($precedente->id);
+
+        $rapport = $comparateur->comparer($resultatsActuels, $resultatsPrecedents);
+
+        // Enrichir chaque resultat avec url, client, regle
+        $enrichir = function (array $resultats, string $clientNom, int $clientId) use ($depotUrl, $depotRegle): array {
+            $enrichis = [];
+            foreach ($resultats as $r) {
+                $url = $depotUrl->trouverParId($r->urlId);
+                $regle = $depotRegle->trouverParId($r->regleId);
+                $enrichis[] = [
+                    'url' => $url?->url ?? '',
+                    'url_libelle' => $url?->libelle ?? '',
+                    'client_nom' => $clientNom,
+                    'client_id' => $clientId,
+                    'regle_type' => $regle?->typeRegle->libelle() ?? '',
+                    'regle_nom' => $regle?->nom ?? '',
+                    'severite' => $r->severite->value,
+                    'message' => $r->message ?? '',
+                    'valeur_attendue' => $r->valeurAttendue,
+                    'valeur_obtenue' => $r->valeurObtenue,
+                ];
+            }
+            return $enrichis;
+        };
+
+        $nouvelles = array_merge($nouvelles, $enrichir($rapport['nouvelles_defaillances'], $clientNom, $clientId));
+        $recuperations = array_merge($recuperations, $enrichir($rapport['recuperations'], $clientNom, $clientId));
+        $persistantes = array_merge($persistantes, $enrichir($rapport['defaillances_persistantes'], $clientNom, $clientId));
+    }
+
+    return ['donnees' => [
+        'nouvelles_defaillances' => $nouvelles,
+        'recuperations' => $recuperations,
+        'defaillances_persistantes' => $persistantes,
+        'resume' => [
+            'nb_nouvelles' => count($nouvelles),
+            'nb_recuperations' => count($recuperations),
+            'nb_persistantes' => count($persistantes),
+        ],
+    ]];
 }
 
 function genererTendances(\PDO $db): array

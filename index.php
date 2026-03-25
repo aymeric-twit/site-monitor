@@ -88,124 +88,117 @@
         <!-- ============================================================== -->
         <div class="tab-pane fade show active" id="pane-dashboard" role="tabpanel" aria-labelledby="tab-dashboard">
 
-            <!-- 1. KPI Cards + Help Panel -->
+            <!-- 1. KPIs compacts (3) + Actions + Help -->
             <div class="row mb-4">
                 <div class="col-lg-8">
-                    <div class="kpi-row" id="kpiRow">
-                        <div class="kpi-card kpi-dark">
-                            <div class="kpi-value" id="kpiClientsActifs">0</div>
-                            <div class="kpi-label" data-i18n="kpi.clientsActifs">Clients actifs</div>
-                            <div class="kpi-sub" data-i18n="kpi.clientsActifsSub">domaines surveilles</div>
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <div class="kpi-row kpi-row-compact flex-grow-1" id="kpiRow">
+                            <div class="kpi-card kpi-dark">
+                                <div class="kpi-value" id="kpiClientsActifs">0</div>
+                                <div class="kpi-label" data-i18n="kpi.clientsActifs">Clients actifs</div>
+                            </div>
+                            <div class="kpi-card">
+                                <div class="kpi-value" id="kpiUrlsSurveillees">0</div>
+                                <div class="kpi-label" data-i18n="kpi.urlsSurveillees">URLs surveillees</div>
+                            </div>
+                            <div class="kpi-card kpi-green">
+                                <div class="kpi-value" id="kpiTauxReussite">--</div>
+                                <div class="kpi-label" data-i18n="kpi.tauxReussite">Taux de reussite</div>
+                            </div>
                         </div>
-                        <div class="kpi-card">
-                            <div class="kpi-value" id="kpiUrlsSurveillees">0</div>
-                            <div class="kpi-label" data-i18n="kpi.urlsSurveillees">URLs surveillees</div>
-                            <div class="kpi-sub" data-i18n="kpi.urlsSurveilleesSub">pages monitorees</div>
-                        </div>
-                        <div class="kpi-card kpi-gold">
-                            <div class="kpi-value" id="kpiExecutions24h">0</div>
-                            <div class="kpi-label" data-i18n="kpi.executions24h">Executions (24h)</div>
-                            <div class="kpi-sub" data-i18n="kpi.executions24hSub">verifications lancees</div>
-                        </div>
-                        <div class="kpi-card kpi-green">
-                            <div class="kpi-value" id="kpiTauxReussite">--</div>
-                            <div class="kpi-label" data-i18n="kpi.tauxReussite">Taux de reussite</div>
-                            <div class="kpi-sub" data-i18n="kpi.tauxReussiteSub">derniere execution</div>
-                        </div>
-                        <div class="kpi-card kpi-teal">
-                            <div class="kpi-value" id="kpiScoreSante">--</div>
-                            <div class="kpi-label" data-i18n="dashboard.score_sante">Score de sante</div>
-                            <div class="kpi-sub">%</div>
-                        </div>
-                        <div class="kpi-card kpi-orange">
-                            <div class="kpi-value" id="kpiChangementsDetectes">0</div>
-                            <div class="kpi-label" data-i18n="dashboard.changements_detectes">Changements detectes</div>
-                            <div class="kpi-sub" data-i18n="dashboard.7_jours">7 jours</div>
-                        </div>
-                        <div class="kpi-card kpi-red">
-                            <div class="kpi-value" id="kpiAlertesCritiques">0</div>
-                            <div class="kpi-label" data-i18n="dashboard.alertes_critiques">Alertes critiques</div>
-                            <div class="kpi-sub">non traitees</div>
+                        <div class="d-flex gap-2 ms-3 flex-shrink-0">
+                            <button type="button" class="btn btn-primary btn-sm" id="btnAjouterClient" data-bs-toggle="modal" data-bs-target="#modalClient">
+                                <i class="bi bi-plus-lg me-1"></i><span data-i18n="dashboard.ajouterClient">Ajouter un client</span>
+                            </button>
+                            <button type="button" class="btn btn-outline-secondary btn-sm" id="btnLancerVerification" data-bs-toggle="modal" data-bs-target="#modalLancerVerification">
+                                <i class="bi bi-play-fill me-1"></i><span data-i18n="dashboard.lancerVerification">Lancer</span>
+                            </button>
                         </div>
                     </div>
                 </div>
                 <div class="col-lg-4" id="helpPanel">
-                                        <div id="platformCreditsSlot"></div>
-        <div class="config-help-panel">
+                    <div id="platformCreditsSlot"></div>
+                    <div class="config-help-panel">
                         <a class="help-title mb-2 d-flex align-items-center text-decoration-none" data-bs-toggle="collapse" href="#helpPanelBody" role="button" aria-expanded="false" aria-controls="helpPanelBody">
-                            <i class="bi bi-info-circle me-1"></i> Comment ça marche
+                            <i class="bi bi-info-circle me-1"></i> Comment ca marche
                             <i class="bi bi-chevron-down ms-auto small"></i>
                         </a>
                         <div class="collapse" id="helpPanelBody">
                             <ul>
-                                <li><strong>Modèle</strong> : créez un modèle de monitoring avec des règles (title, meta, statuts HTTP, contenu).</li>
-                                <li><strong>Planification</strong> : planifiez des exécutions pour détecter les régressions SEO.</li>
-                                <li><strong>Dashboard</strong> : KPIs de santé, historique des vérifications, alertes.</li>
-                                <li><strong>Alertes</strong> : notifications automatiques en cas de régression détectée.</li>
-                            </ul>
-                            <hr>
-                            <div class="help-title mb-2">
-                                <i class="bi bi-speedometer2 me-1"></i> Quota
-                            </div>
-                            <ul class="mb-0">
-                                <li>1 vérification d'URL = <strong>1 crédit</strong></li>
+                                <li><strong>Client</strong> : ajoutez un client, ses URLs et un modele de regles.</li>
+                                <li><strong>Verification</strong> : lancez une execution pour detecter les regressions.</li>
+                                <li><strong>Feed</strong> : voyez en un coup d'oeil ce qui a change.</li>
                             </ul>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- 2. Sante par client -->
-            <div class="card mb-4" id="cardSanteClients">
+            <!-- 2. FEED "Quoi de neuf ?" (hero section) -->
+            <div class="card mb-4" id="cardChangementsFeed">
                 <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
-                    <h6 class="mb-0 fw-bold"><i class="bi bi-heart-pulse me-2"></i><span data-i18n="dashboard.sante_clients">Sante par client</span></h6>
-                    <div class="btn-group btn-group-sm" id="triSanteClients">
-                        <button type="button" class="btn btn-outline-secondary active" data-tri="score" data-i18n="dashboard.tri_score">Score</button>
-                        <button type="button" class="btn btn-outline-secondary" data-tri="alertes" data-i18n="dashboard.tri_alertes">Alertes</button>
-                        <button type="button" class="btn btn-outline-secondary" data-tri="date" data-i18n="dashboard.tri_date">Derniere verif.</button>
+                    <h6 class="mb-0 fw-bold">
+                        <i class="bi bi-arrow-left-right me-2"></i>
+                        <span data-i18n="dashboard.changements_feed">Quoi de neuf ?</span>
+                        <span class="badge bg-secondary ms-2" id="badgeNbChangements">0</span>
+                    </h6>
+                    <div class="btn-group btn-group-sm" id="filtreChangementsFeed">
+                        <button type="button" class="btn btn-outline-danger btn-sm active" data-filtre="nouvelles">
+                            <i class="bi bi-exclamation-triangle me-1"></i><span data-i18n="dashboard.nouvelles_defaillances">Nouveaux problemes</span>
+                            <span class="badge bg-danger ms-1" id="countNouvelles">0</span>
+                        </button>
+                        <button type="button" class="btn btn-outline-success btn-sm" data-filtre="recuperations">
+                            <i class="bi bi-check-circle me-1"></i><span data-i18n="dashboard.recuperations">Resolus</span>
+                            <span class="badge bg-success ms-1" id="countRecuperations">0</span>
+                        </button>
+                        <button type="button" class="btn btn-outline-warning btn-sm" data-filtre="persistantes">
+                            <i class="bi bi-arrow-repeat me-1"></i><span data-i18n="dashboard.persistantes">Persistants</span>
+                            <span class="badge bg-warning text-dark ms-1" id="countPersistantes">0</span>
+                        </button>
                     </div>
                 </div>
-                <div class="card-body">
-                    <div class="row g-3" id="grilleSanteClients">
-                        <div class="col-12 text-center text-muted py-3" id="santeClientsVide">
-                            <i class="bi bi-hourglass-split"></i> Chargement...
+                <div class="card-body p-0" id="corpsChangementsFeed"></div>
+                <div class="card-footer text-center py-3" id="feedVide">
+                    <i class="bi bi-check-circle text-success fs-4 d-block mb-1"></i>
+                    <span class="text-muted" data-i18n="dashboard.aucun_changement_feed">Aucun changement detecte. Tout est stable.</span>
+                </div>
+            </div>
+
+            <!-- 3. Sante par client + Alertes recentes (2 colonnes) -->
+            <div class="row mb-4">
+                <div class="col-lg-8">
+                    <div class="card h-100" id="cardSanteClients">
+                        <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+                            <h6 class="mb-0 fw-bold"><i class="bi bi-heart-pulse me-2"></i><span data-i18n="dashboard.sante_clients">Sante par client</span></h6>
+                            <div class="btn-group btn-group-sm" id="triSanteClients">
+                                <button type="button" class="btn btn-outline-secondary active" data-tri="score" data-i18n="dashboard.tri_score">Score</button>
+                                <button type="button" class="btn btn-outline-secondary" data-tri="alertes" data-i18n="dashboard.tri_alertes">Alertes</button>
+                                <button type="button" class="btn btn-outline-secondary" data-tri="date" data-i18n="dashboard.tri_date">Derniere verif.</button>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div class="row g-3" id="grilleSanteClients">
+                                <div class="col-12 text-center text-muted py-3" id="santeClientsVide">
+                                    <i class="bi bi-hourglass-split"></i> Chargement...
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
-
-            <!-- 3. URLs a risque -->
-            <div class="card mb-4" id="cardUrlsARisque" style="display:none;">
-                <div class="card-header">
-                    <h6 class="mb-0 fw-bold"><i class="bi bi-exclamation-triangle me-2"></i><span data-i18n="dashboard.urls_a_risque">URLs a risque</span></h6>
-                </div>
-                <div class="card-body p-0">
-                    <div class="table-responsive">
-                        <table class="table table-hover mb-0" id="tableUrlsRisque">
-                            <thead>
-                                <tr>
-                                    <th>URL</th>
-                                    <th>Client</th>
-                                    <th data-i18n="regle.severite">Severite</th>
-                                    <th data-i18n="dashboard.nb_echecs">Echecs</th>
-                                    <th>Messages</th>
-                                </tr>
-                            </thead>
-                            <tbody id="bodyUrlsRisque"></tbody>
-                        </table>
+                <div class="col-lg-4">
+                    <div class="card h-100" id="cardAlertesRecentes" style="display:none;">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h6 class="mb-0 fw-bold"><i class="bi bi-bell me-2"></i><span data-i18n="alerte.recentes">Alertes</span></h6>
+                            <button type="button" class="btn btn-outline-secondary btn-sm" id="btnVoirToutesAlertes">
+                                <span data-i18n="alerte.voir_detail">Voir tout</span>
+                            </button>
+                        </div>
+                        <div class="card-body p-2" id="listeAlertesRecentes"></div>
                     </div>
                 </div>
             </div>
 
-            <!-- 4. Changements detectes -->
-            <div class="card mb-4" id="cardChangements" style="display:none;">
-                <div class="card-header">
-                    <h6 class="mb-0 fw-bold"><i class="bi bi-arrow-left-right me-2"></i><span data-i18n="dashboard.changements_recents">Changements recents</span></h6>
-                </div>
-                <div class="card-body" id="listeChangements"></div>
-            </div>
-
-            <!-- 5. Tendances (Chart.js) -->
+            <!-- 4. Tendances (Chart.js) -->
             <div class="card mb-4" id="cardTendances">
                 <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
                     <h6 class="mb-0 fw-bold"><i class="bi bi-graph-up me-2"></i><span data-i18n="dashboard.tendances">Tendances (30 jours)</span></h6>
@@ -229,57 +222,6 @@
                 <div class="card-body">
                     <div class="graphique-conteneur">
                         <canvas id="canvasTendances"></canvas>
-                    </div>
-                </div>
-            </div>
-
-            <!-- 6. Alertes recentes -->
-            <div class="card mb-4" id="cardAlertesRecentes" style="display:none;">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <h6 class="mb-0 fw-bold"><i class="bi bi-bell me-2"></i><span data-i18n="alerte.recentes">Alertes recentes</span></h6>
-                    <button type="button" class="btn btn-outline-secondary btn-sm" id="btnVoirToutesAlertes">
-                        <span data-i18n="alerte.voir_detail">Voir tout</span>
-                    </button>
-                </div>
-                <div class="card-body p-2" id="listeAlertesRecentes"></div>
-            </div>
-
-            <!-- 7. Barre d'actions + Table clients -->
-            <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
-                <h5 class="mb-0 fw-bold" data-i18n="dashboard.titreClients">Clients</h5>
-                <div class="d-flex gap-2">
-                    <button type="button" class="btn btn-primary btn-sm" id="btnAjouterClient" data-bs-toggle="modal" data-bs-target="#modalClient">
-                        <i class="bi bi-plus-lg me-1"></i><span data-i18n="dashboard.ajouterClient">Ajouter un client</span>
-                    </button>
-                    <button type="button" class="btn btn-outline-secondary btn-sm" id="btnLancerVerification" data-bs-toggle="modal" data-bs-target="#modalLancerVerification">
-                        <i class="bi bi-play-fill me-1"></i><span data-i18n="dashboard.lancerVerification">Lancer une verification</span>
-                    </button>
-                </div>
-            </div>
-
-            <div class="card">
-                <div class="card-body p-0">
-                    <div class="table-responsive">
-                        <table class="table table-hover mb-0" id="tableClients">
-                            <thead>
-                                <tr>
-                                    <th class="sortable" data-sort="nom" data-i18n="table.nom">Nom</th>
-                                    <th class="sortable" data-sort="domaine" data-i18n="table.domaine">Domaine</th>
-                                    <th data-i18n="table.groupes">Groupes</th>
-                                    <th class="sortable" data-sort="urls" data-i18n="table.urls">URLs</th>
-                                    <th data-i18n="table.statut">Statut</th>
-                                    <th data-i18n="table.actions">Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody id="bodyClients">
-                                <tr id="rowClientsVide">
-                                    <td colspan="6" class="text-center text-muted py-4">
-                                        <i class="bi bi-inbox fs-3 d-block mb-2"></i>
-                                        <span data-i18n="dashboard.aucunClient">Aucun client configure. Commencez par en ajouter un.</span>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
                     </div>
                 </div>
             </div>

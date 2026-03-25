@@ -1681,3 +1681,95 @@ textarea.form-control {
     border-radius: 0.75rem;
 }
 
+/* ═══════════════════════════════════════════════════════════════
+   27. FEED "QUOI DE NEUF ?"
+   ═══════════════════════════════════════════════════════════════ */
+
+.kpi-row-compact {
+    grid-template-columns: repeat(3, 1fr) !important;
+}
+
+#corpsChangementsFeed {
+    max-height: 500px;
+    overflow-y: auto;
+}
+
+.feed-groupe-client {
+    background: var(--bg-card-alt, #f8fafc);
+    padding: 0.5rem 1.25rem;
+    font-weight: 600;
+    font-size: 0.85rem;
+    color: var(--text-primary, #333);
+    border-bottom: 1px solid var(--border-color, #e2e8f0);
+    position: sticky;
+    top: 0;
+    z-index: 1;
+}
+
+.feed-item {
+    display: flex;
+    gap: 0.75rem;
+    padding: 0.75rem 1.25rem;
+    border-bottom: 1px solid var(--border-color, #e2e8f0);
+    align-items: center;
+    transition: background 0.1s;
+}
+.feed-item:hover {
+    background: rgba(102, 178, 178, 0.04);
+}
+.feed-item:last-child {
+    border-bottom: none;
+}
+
+.feed-icone {
+    width: 2rem;
+    height: 2rem;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    font-size: 0.85rem;
+}
+.feed-icone-nouvelles    { background: #fecaca; color: #991b1b; }
+.feed-icone-recuperations { background: #d1fae5; color: #065f46; }
+.feed-icone-persistantes  { background: #fef3c7; color: #92400e; }
+
+.feed-contenu {
+    flex: 1;
+    min-width: 0;
+}
+.feed-url {
+    font-weight: 600;
+    font-size: 0.85rem;
+    color: var(--text-primary, #333);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.feed-meta {
+    font-size: 0.75rem;
+    color: var(--text-secondary, #64748b);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.feed-badges {
+    flex-shrink: 0;
+}
+
+#feedVide {
+    font-size: 0.9rem;
+    color: var(--text-secondary, #64748b);
+}
+
+#filtreChangementsFeed .btn.active.btn-outline-danger  { background: #dc3545; color: #fff; border-color: #dc3545; }
+#filtreChangementsFeed .btn.active.btn-outline-success { background: #198754; color: #fff; border-color: #198754; }
+#filtreChangementsFeed .btn.active.btn-outline-warning { background: #ffc107; color: #212529; border-color: #ffc107; }
+
+@media (max-width: 768px) {
+    .kpi-row-compact { grid-template-columns: 1fr !important; }
+    #filtreChangementsFeed { flex-direction: column; }
+    #filtreChangementsFeed .btn { border-radius: 0.375rem !important; margin-bottom: 0.25rem; }
+}
+
