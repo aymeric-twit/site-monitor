@@ -88,32 +88,35 @@
         <!-- ============================================================== -->
         <div class="tab-pane fade show active" id="pane-dashboard" role="tabpanel" aria-labelledby="tab-dashboard">
 
-            <!-- 1. KPIs compacts (3) + Actions + Help -->
+            <!-- 1a. KPIs compacts (3) -->
+            <div class="kpi-row kpi-row-compact mb-3" id="kpiRow">
+                <div class="kpi-card kpi-dark">
+                    <div class="kpi-value" id="kpiClientsActifs">0</div>
+                    <div class="kpi-label" data-i18n="kpi.clientsActifs">Clients actifs</div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-value" id="kpiUrlsSurveillees">0</div>
+                    <div class="kpi-label" data-i18n="kpi.urlsSurveillees">URLs surveillees</div>
+                </div>
+                <div class="kpi-card kpi-green">
+                    <div class="kpi-value" id="kpiTauxReussite">--</div>
+                    <div class="kpi-label" data-i18n="kpi.tauxReussite">Taux de reussite</div>
+                </div>
+            </div>
+
+            <!-- 1b. Boutons actions + Help -->
             <div class="row mb-4">
                 <div class="col-lg-8">
-                    <div class="d-flex justify-content-between align-items-center mb-3">
-                        <div class="kpi-row kpi-row-compact flex-grow-1" id="kpiRow">
-                            <div class="kpi-card kpi-dark">
-                                <div class="kpi-value" id="kpiClientsActifs">0</div>
-                                <div class="kpi-label" data-i18n="kpi.clientsActifs">Clients actifs</div>
-                            </div>
-                            <div class="kpi-card">
-                                <div class="kpi-value" id="kpiUrlsSurveillees">0</div>
-                                <div class="kpi-label" data-i18n="kpi.urlsSurveillees">URLs surveillees</div>
-                            </div>
-                            <div class="kpi-card kpi-green">
-                                <div class="kpi-value" id="kpiTauxReussite">--</div>
-                                <div class="kpi-label" data-i18n="kpi.tauxReussite">Taux de reussite</div>
-                            </div>
-                        </div>
-                        <div class="d-flex gap-2 ms-3 flex-shrink-0">
-                            <button type="button" class="btn btn-primary btn-sm" id="btnAjouterClient" data-bs-toggle="modal" data-bs-target="#modalClient">
-                                <i class="bi bi-plus-lg me-1"></i><span data-i18n="dashboard.ajouterClient">Ajouter un client</span>
-                            </button>
-                            <button type="button" class="btn btn-outline-secondary btn-sm" id="btnLancerVerification" data-bs-toggle="modal" data-bs-target="#modalLancerVerification">
-                                <i class="bi bi-play-fill me-1"></i><span data-i18n="dashboard.lancerVerification">Lancer</span>
-                            </button>
-                        </div>
+                    <div class="d-flex gap-2 flex-wrap">
+                        <button type="button" class="btn btn-primary btn-sm" id="btnAjouterClient" data-bs-toggle="modal" data-bs-target="#modalClient">
+                            <i class="bi bi-plus-lg me-1"></i><span data-i18n="dashboard.ajouterClient">Ajouter un client</span>
+                        </button>
+                        <button type="button" class="btn btn-outline-secondary btn-sm" id="btnLancerVerification" data-bs-toggle="modal" data-bs-target="#modalLancerVerification">
+                            <i class="bi bi-play-fill me-1"></i><span data-i18n="dashboard.lancerVerification">Lancer une verification</span>
+                        </button>
+                        <button type="button" class="btn btn-outline-primary btn-sm" id="btnSetupRapide" data-bs-toggle="modal" data-bs-target="#modalSetupRapide">
+                            <i class="bi bi-lightning me-1"></i><span data-i18n="setup.titre">Setup rapide</span>
+                        </button>
                     </div>
                 </div>
                 <div class="col-lg-4" id="helpPanel">
@@ -971,6 +974,43 @@
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal" data-i18n="modal.fermer">Fermer</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal : Setup rapide (groupes + URLs) -->
+<div class="modal fade" id="modalSetupRapide" tabindex="-1" aria-labelledby="modalSetupRapideLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable">
+        <div class="modal-content" style="border-radius:1rem;overflow:hidden;">
+            <div class="modal-header" style="background:var(--brand-dark);border-bottom:2.5px solid var(--brand-gold);">
+                <h5 class="modal-title text-white fw-bold" id="modalSetupRapideLabel">
+                    <i class="bi bi-lightning me-2"></i><span data-i18n="setup.titre">Setup rapide</span>
+                    <span class="fw-normal ms-2" id="setupClientNom"></span>
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fermer"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="setupClientId" value="">
+                <!-- Select client (visible si pas pre-rempli) -->
+                <div class="mb-3" id="blocSetupSelectClient">
+                    <label for="setupSelectClient" class="form-label" data-i18n="setup.selectClient">Client</label>
+                    <select class="form-select" id="setupSelectClient">
+                        <option value="">-- Choisir un client --</option>
+                    </select>
+                </div>
+                <!-- Zone dynamique des blocs groupe -->
+                <div id="setupGroupes"></div>
+                <!-- Bouton ajouter un groupe -->
+                <button type="button" class="btn btn-outline-primary btn-sm mt-2" id="btnSetupAjouterGroupe">
+                    <i class="bi bi-plus-lg me-1"></i><span data-i18n="setup.ajouterGroupe">Ajouter un groupe</span>
+                </button>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal" data-i18n="action.annuler">Annuler</button>
+                <button type="button" class="btn btn-primary btn-sm" id="btnSetupEnregistrer">
+                    <i class="bi bi-check-lg me-1"></i><span data-i18n="setup.enregistrerTout">Enregistrer tout</span>
+                </button>
             </div>
         </div>
     </div>

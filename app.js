@@ -92,52 +92,6 @@ async function chargerDashboard() {
     }
 }
 
-function renderClientsTable(clients) {
-    const tbody = document.getElementById('bodyClients');
-    const rowVide = document.getElementById('rowClientsVide');
-
-    // Supprimer les lignes existantes sauf la ligne vide
-    tbody.querySelectorAll('tr:not(#rowClientsVide)').forEach(tr => tr.remove());
-
-    if (!clients || clients.length === 0) {
-        rowVide.style.display = '';
-        return;
-    }
-    rowVide.style.display = 'none';
-
-    clients.forEach(c => {
-        const tr = document.createElement('tr');
-        const statutBadge = c.actif
-            ? '<span class="badge bg-success">Actif</span>'
-            : '<span class="badge bg-secondary">Inactif</span>';
-
-        tr.innerHTML = `
-            <td class="fw-semibold">${echapper(c.nom)}</td>
-            <td><a href="https://${echapper(c.domaine)}" target="_blank" rel="noopener" class="text-decoration-none">${echapper(c.domaine)}</a></td>
-            <td>${c.nb_groupes ?? 0}</td>
-            <td>${c.nb_urls ?? 0}</td>
-            <td>${statutBadge}</td>
-            <td>
-                <div class="btn-group btn-group-sm">
-                    <button type="button" class="btn btn-outline-primary btn-sm" title="${t('client.voir')}" onclick="ouvrirDetailClient(${c.id})">
-                        <i class="bi bi-eye"></i>
-                    </button>
-                    <button type="button" class="btn btn-outline-secondary btn-sm" title="${t('client.modifier')}" onclick="ouvrirEditionClient(${c.id})">
-                        <i class="bi bi-pencil"></i>
-                    </button>
-                    <button type="button" class="btn btn-outline-danger btn-sm" title="${t('client.supprimer')}" onclick="supprimerClient(${c.id}, '${echapper(c.nom)}')">
-                        <i class="bi bi-trash"></i>
-                    </button>
-                    <button type="button" class="btn btn-outline-success btn-sm" title="${t('client.lancer')}" onclick="ouvrirLancerVerification(${c.id})">
-                        <i class="bi bi-play-fill"></i>
-                    </button>
-                </div>
-            </td>
-        `;
-        tbody.appendChild(tr);
-    });
-}
-
 function remplirSelectsClient(clients) {
     // Select dans la modale modele
     const selModele = document.getElementById('modeleClientId');
@@ -265,6 +219,121 @@ function supprimerClient(id, nom) {
             }
         }
     );
+}
+
+// ---------------------------------------------------------------------------
+// Setup rapide — creation de groupes + URLs en batch
+// ---------------------------------------------------------------------------
+
+let _setupGroupeIndex = 0;
+
+function ouvrirSetupRapide(clientId, clientNom) {
+    _setupGroupeIndex = 0;
+    const container = document.getElementById('setupGroupes');
+    container.innerHTML = '';
+
+    document.getElementById('setupClientId').value = clientId || '';
+    document.getElementById('setupClientNom').textContent = clientNom ? ('\u2014 ' + clientNom) : '';
+
+    // Gerer le select client
+    const blocSelect = document.getElementById('blocSetupSelectClient');
+    if (clientId) {
+        blocSelect.style.display = 'none';
+    } else {
+        blocSelect.style.display = '';
+        const select = document.getElementById('setupSelectClient');
+        select.innerHTML = '<option value="">-- Choisir un client --</option>';
+        (cacheClients || []).forEach(c => {
+            const opt = document.createElement('option');
+            opt.value = c.id;
+            opt.textContent = c.nom + ' (' + c.domaine + ')';
+            select.appendChild(opt);
+        });
+    }
+
+    ajouterBlocGroupe();
+}
+
+function ajouterBlocGroupe() {
+    const container = document.getElementById('setupGroupes');
+    const idx = _setupGroupeIndex++;
+    const div = document.createElement('div');
+    div.className = 'card mb-3 setup-groupe-bloc';
+    div.dataset.index = idx;
+    div.innerHTML = `
+        <div class="card-body py-2 px-3">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <label class="form-label mb-0 fw-semibold small">${t('setup.nomGroupe', 'Nom du groupe')}</label>
+                <button type="button" class="btn btn-outline-danger btn-sm py-0 px-1" onclick="this.closest('.setup-groupe-bloc').remove()" title="Supprimer">
+                    <i class="bi bi-x-lg"></i>
+                </button>
+            </div>
+            <input type="text" class="form-control form-control-sm mb-2 setup-groupe-nom" placeholder="Ex: Pages produits">
+            <label class="form-label mb-1 small text-muted">${t('setup.urlsPlaceholder', 'URLs (une par ligne)')}</label>
+            <textarea class="form-control form-control-sm font-monospace setup-groupe-urls" rows="4" placeholder="https://www.example.com/page1&#10;https://www.example.com/page2"></textarea>
+        </div>
+    `;
+    container.appendChild(div);
+}
+
+async function sauvegarderSetupRapide() {
+    const clientId = document.getElementById('setupClientId').value
+        || document.getElementById('setupSelectClient').value;
+
+    if (!clientId) {
+        afficherToast(t('setup.selectClient', 'Selectionnez un client'), 'warning');
+        return;
+    }
+
+    const blocs = document.querySelectorAll('.setup-groupe-bloc');
+    const groupes = [];
+
+    blocs.forEach(bloc => {
+        const nom = bloc.querySelector('.setup-groupe-nom').value.trim();
+        const urlsTexte = bloc.querySelector('.setup-groupe-urls').value.trim();
+        if (nom) {
+            groupes.push({
+                nom,
+                urls: urlsTexte.split('\n').map(l => l.trim()).filter(l => l !== ''),
+            });
+        }
+    });
+
+    if (groupes.length === 0) {
+        afficherToast(t('setup.ajouterGroupe', 'Ajoutez au moins un groupe'), 'warning');
+        return;
+    }
+
+    try {
+        const res = await apiPost({
+            entite: 'groupe',
+            action: 'creer_lot',
+            client_id: clientId,
+            groupes: JSON.stringify(groupes),
+        });
+
+        if (res.erreur) {
+            afficherToast(res.erreur, 'danger');
+            return;
+        }
+
+        const d = res.donnees || {};
+        afficherToast(
+            (d.groupes_crees || 0) + ' ' + t('setup.succes', 'groupe(s) et') + ' ' + (d.urls_creees || 0) + ' URLs',
+            'success'
+        );
+        bootstrap.Modal.getInstance(document.getElementById('modalSetupRapide'))?.hide();
+        chargerDashboard();
+
+        // Rafraichir le detail client si ouvert
+        if (detailClientActuelId) {
+            chargerGroupesDetail(detailClientActuelId);
+            chargerUrlsDetail(detailClientActuelId);
+        }
+    } catch (e) {
+        console.error('sauvegarderSetupRapide:', e);
+        afficherToast(t('message.erreur'), 'danger');
+    }
 }
 
 // ---------------------------------------------------------------------------
@@ -1895,6 +1964,16 @@ document.addEventListener('DOMContentLoaded', async () => {
         document.querySelectorAll('#filtreChangementsFeed .btn').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
         renderChangementsFeed(btn.dataset.filtre);
+    });
+
+    // --- Setup rapide ---
+    document.getElementById('btnSetupAjouterGroupe')?.addEventListener('click', () => ajouterBlocGroupe());
+    document.getElementById('btnSetupEnregistrer')?.addEventListener('click', () => sauvegarderSetupRapide());
+    document.getElementById('modalSetupRapide')?.addEventListener('show.bs.modal', () => {
+        // Si pas pre-rempli par ouvrirSetupRapide(), ouvrir avec le select client
+        if (!document.getElementById('setupClientId').value) {
+            ouvrirSetupRapide(null, null);
+        }
     });
 
     // --- Dashboard avance : filtre tendances par client ---

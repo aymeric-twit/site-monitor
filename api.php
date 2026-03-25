@@ -181,6 +181,7 @@ function gererGroupes(\PDO $db, string $action): array
         'lister' => listerGroupes($depot),
         'obtenir' => obtenirGroupe($depot),
         'creer' => creerGroupe($depot),
+        'creer_lot' => creerGroupesEnLot($db, $depot),
         'modifier' => modifierGroupe($depot),
         'supprimer' => supprimerGroupe($depot),
         default => ['erreur' => "Action inconnue : {$action}"],
@@ -225,6 +226,78 @@ function creerGroupe(DepotGroupeUrls $depot): array
 
     $id = $depot->creer($groupe);
     return ['donnees' => ['id' => $id], 'message' => 'Groupe cree'];
+}
+
+function creerGroupesEnLot(\PDO $db, DepotGroupeUrls $depotGroupe): array
+{
+    $clientId = (int) ($_POST['client_id'] ?? 0);
+    $groupesJson = $_POST['groupes'] ?? '';
+
+    if ($clientId <= 0 || $groupesJson === '') {
+        return ['erreur' => 'client_id et groupes requis'];
+    }
+
+    $groupes = json_decode($groupesJson, true);
+    if (!is_array($groupes) || empty($groupes)) {
+        return ['erreur' => 'Format groupes invalide'];
+    }
+
+    $depotUrl = new DepotUrl($db);
+    $groupesCrees = 0;
+    $urlsCreees = 0;
+
+    foreach ($groupes as $g) {
+        $nom = trim($g['nom'] ?? '');
+        if ($nom === '') {
+            continue;
+        }
+
+        $groupe = new GroupeUrls(
+            id: null,
+            clientId: $clientId,
+            nom: $nom,
+            description: null,
+            ordreTri: $groupesCrees,
+            actif: true,
+            planification: null,
+            creeLe: null,
+            modifieLe: null,
+        );
+        $groupeId = $depotGroupe->creer($groupe);
+        $groupesCrees++;
+
+        // Creer les URLs du groupe
+        $urlsTexte = $g['urls'] ?? [];
+        if (is_string($urlsTexte)) {
+            $urlsTexte = array_filter(array_map('trim', explode("\n", $urlsTexte)), fn(string $l): bool => $l !== '');
+        }
+
+        foreach ($urlsTexte as $urlStr) {
+            $urlStr = trim($urlStr);
+            if ($urlStr === '') {
+                continue;
+            }
+            $url = new Url(
+                id: null,
+                groupeId: $groupeId,
+                url: $urlStr,
+                libelle: null,
+                actif: true,
+                derniereVerification: null,
+                dernierStatut: null,
+                notes: null,
+                creeLe: null,
+                modifieLe: null,
+            );
+            $depotUrl->creer($url);
+            $urlsCreees++;
+        }
+    }
+
+    return [
+        'donnees' => ['groupes_crees' => $groupesCrees, 'urls_creees' => $urlsCreees],
+        'message' => "{$groupesCrees} groupe(s) et {$urlsCreees} URL(s) crees",
+    ];
 }
 
 function modifierGroupe(DepotGroupeUrls $depot): array
