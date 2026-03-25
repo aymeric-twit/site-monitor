@@ -2214,6 +2214,8 @@ async function chargerSanteParClient() {
 
     } catch (e) {
         console.error('chargerSanteParClient:', e);
+        const vide = document.getElementById('santeClientsVide');
+        if (vide) vide.innerHTML = `<i class="bi bi-exclamation-triangle text-warning"></i> ${e.message || t('message.erreur')}`;
     }
 }
 
