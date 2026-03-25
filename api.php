@@ -761,7 +761,8 @@ function lancerExecution(\PDO $db, DepotExecution $depot): array
     );
 
     // Lancer le worker en arriere-plan (stderr vers error.log pour debug)
-    $phpBin = PHP_BINARY;
+    // PHP_BINARY peut pointer vers php-fpm en contexte FastCGI — chercher le CLI
+    $phpBin = resoudrePhpCli();
     $workerPath = __DIR__ . '/worker.php';
     $errorLog = $dossierJob . '/error.log';
     $cmd = sprintf(
@@ -1279,6 +1280,48 @@ function obtenirUrlsClient(\PDO $db): array
     $urls = $depotUrl->trouverActivesParClient($clientId);
 
     return ['donnees' => array_map(fn($u) => $u->url, $urls)];
+}
+
+// === PHP CLI RESOLUTION ===
+
+/**
+ * Resout le chemin vers le binaire PHP CLI.
+ * PHP_BINARY peut pointer vers php-fpm en contexte FastCGI.
+ */
+function resoudrePhpCli(): string
+{
+    // Si PHP_BINARY est deja le CLI (pas fpm, pas cgi)
+    $binary = PHP_BINARY;
+    if (!str_contains($binary, 'fpm') && !str_contains($binary, 'cgi')) {
+        return $binary;
+    }
+
+    // Chercher php CLI a cote de php-fpm (meme prefixe de version)
+    // Ex: /usr/sbin/php-fpm8.3 → /usr/bin/php8.3
+    if (preg_match('/php-fpm(\d+\.\d+)/', $binary, $m)) {
+        $candidates = [
+            '/usr/bin/php' . $m[1],
+            '/usr/local/bin/php' . $m[1],
+            '/usr/bin/php',
+        ];
+    } else {
+        $candidates = ['/usr/bin/php8.3', '/usr/bin/php8.2', '/usr/bin/php8.1', '/usr/bin/php'];
+    }
+
+    foreach ($candidates as $candidate) {
+        if (is_executable($candidate)) {
+            return $candidate;
+        }
+    }
+
+    // Dernier recours : which php
+    $which = trim(shell_exec('which php 2>/dev/null') ?? '');
+    if ($which !== '' && is_executable($which)) {
+        return $which;
+    }
+
+    // Fallback : PHP_BINARY meme si c'est fpm (mieux que rien)
+    return $binary;
 }
 
 // === DIAGNOSTIC (temporaire) ===
