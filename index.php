@@ -165,37 +165,7 @@
                 </div>
             </div>
 
-            <!-- 2. FEED "Quoi de neuf ?" (hero section) -->
-            <div class="card mb-4" id="cardChangementsFeed">
-                <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
-                    <h6 class="mb-0 fw-bold">
-                        <i class="bi bi-arrow-left-right me-2"></i>
-                        <span data-i18n="dashboard.changements_feed">Quoi de neuf ?</span>
-                        <span class="badge bg-secondary ms-2" id="badgeNbChangements">0</span>
-                    </h6>
-                    <div class="btn-group btn-group-sm" id="filtreChangementsFeed">
-                        <button type="button" class="btn btn-outline-danger btn-sm active" data-filtre="nouvelles">
-                            <i class="bi bi-exclamation-triangle me-1"></i><span data-i18n="dashboard.nouvelles_defaillances">Nouveaux problemes</span>
-                            <span class="badge bg-danger ms-1" id="countNouvelles">0</span>
-                        </button>
-                        <button type="button" class="btn btn-outline-success btn-sm" data-filtre="recuperations">
-                            <i class="bi bi-check-circle me-1"></i><span data-i18n="dashboard.recuperations">Resolus</span>
-                            <span class="badge bg-success ms-1" id="countRecuperations">0</span>
-                        </button>
-                        <button type="button" class="btn btn-outline-warning btn-sm" data-filtre="persistantes">
-                            <i class="bi bi-arrow-repeat me-1"></i><span data-i18n="dashboard.persistantes">Persistants</span>
-                            <span class="badge bg-warning text-dark ms-1" id="countPersistantes">0</span>
-                        </button>
-                    </div>
-                </div>
-                <div class="card-body p-0" id="corpsChangementsFeed"></div>
-                <div class="card-footer text-center py-3" id="feedVide">
-                    <i class="bi bi-check-circle text-success fs-4 d-block mb-1"></i>
-                    <span class="text-muted" data-i18n="dashboard.aucun_changement_feed">Aucun changement detecte. Tout est stable.</span>
-                </div>
-            </div>
-
-            <!-- 3. Sante par client + Alertes recentes (2 colonnes) -->
+            <!-- 2. Sante par client + Alertes recentes (2 colonnes) -->
             <div class="row mb-4">
                 <div class="col-lg-8">
                     <div class="card h-100" id="cardSanteClients">
@@ -226,6 +196,36 @@
                         </div>
                         <div class="card-body p-2" id="listeAlertesRecentes"></div>
                     </div>
+                </div>
+            </div>
+
+            <!-- 3. FEED "Quoi de neuf ?" -->
+            <div class="card mb-4" id="cardChangementsFeed">
+                <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+                    <h6 class="mb-0 fw-bold">
+                        <i class="bi bi-arrow-left-right me-2"></i>
+                        <span data-i18n="dashboard.changements_feed">Quoi de neuf ?</span>
+                        <span class="badge bg-secondary ms-2" id="badgeNbChangements">0</span>
+                    </h6>
+                    <div class="btn-group btn-group-sm" id="filtreChangementsFeed">
+                        <button type="button" class="btn btn-outline-danger btn-sm active" data-filtre="nouvelles">
+                            <i class="bi bi-exclamation-triangle me-1"></i><span data-i18n="dashboard.nouvelles_defaillances">Nouveaux problemes</span>
+                            <span class="badge bg-danger ms-1" id="countNouvelles">0</span>
+                        </button>
+                        <button type="button" class="btn btn-outline-success btn-sm" data-filtre="recuperations">
+                            <i class="bi bi-check-circle me-1"></i><span data-i18n="dashboard.recuperations">Resolus</span>
+                            <span class="badge bg-success ms-1" id="countRecuperations">0</span>
+                        </button>
+                        <button type="button" class="btn btn-outline-warning btn-sm" data-filtre="persistantes">
+                            <i class="bi bi-arrow-repeat me-1"></i><span data-i18n="dashboard.persistantes">Persistants</span>
+                            <span class="badge bg-warning text-dark ms-1" id="countPersistantes">0</span>
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body p-0" id="corpsChangementsFeed"></div>
+                <div class="card-footer text-center py-3" id="feedVide">
+                    <i class="bi bi-check-circle text-success fs-4 d-block mb-1"></i>
+                    <span class="text-muted" data-i18n="dashboard.aucun_changement_feed">Aucun changement detecte. Tout est stable.</span>
                 </div>
             </div>
 
