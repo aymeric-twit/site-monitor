@@ -72,6 +72,7 @@ try {
         'dashboard' => genererDashboard($db, $action, $utilisateurId),
         'indexation' => gererIndexation($db, $action, $utilisateurId),
         'types_regles' => listerTypesRegles(),
+        'diagnostic' => diagnosticWorker(),
         default => ['erreur' => "Entite inconnue : {$entite}"],
     };
 
@@ -1278,4 +1279,74 @@ function obtenirUrlsClient(\PDO $db): array
     $urls = $depotUrl->trouverActivesParClient($clientId);
 
     return ['donnees' => array_map(fn($u) => $u->url, $urls)];
+}
+
+// === DIAGNOSTIC (temporaire) ===
+
+function diagnosticWorker(): array
+{
+    $phpBin = PHP_BINARY;
+    $workerPath = __DIR__ . '/worker.php';
+    $dataDir = __DIR__ . '/data';
+    $jobsDir = $dataDir . '/jobs';
+
+    // Lister les derniers jobs et leurs fichiers
+    $jobs = [];
+    if (is_dir($jobsDir)) {
+        $dirs = scandir($jobsDir, SCANDIR_SORT_DESCENDING);
+        $count = 0;
+        foreach ($dirs as $d) {
+            if ($d === '.' || $d === '..') continue;
+            if ($count >= 3) break;
+            $jobDir = $jobsDir . '/' . $d;
+            $job = ['id' => $d, 'fichiers' => []];
+            foreach (['config.json', 'progress.json', 'error.log'] as $f) {
+                $chemin = $jobDir . '/' . $f;
+                if (file_exists($chemin)) {
+                    $contenu = file_get_contents($chemin);
+                    $job['fichiers'][$f] = mb_substr($contenu, 0, 2000);
+                }
+            }
+            $jobs[] = $job;
+            $count++;
+        }
+    }
+
+    // Tester si exec() fonctionne
+    $execTest = null;
+    if (function_exists('exec')) {
+        $output = [];
+        $returnCode = -1;
+        exec($phpBin . ' -v 2>&1', $output, $returnCode);
+        $execTest = [
+            'disponible' => true,
+            'retour' => $returnCode,
+            'sortie' => implode("\n", array_slice($output, 0, 3)),
+        ];
+    } else {
+        $execTest = ['disponible' => false];
+    }
+
+    // Tester un mini worker
+    $testCmd = sprintf('%s -r "echo json_encode([\"ok\"=>true]);" 2>&1', $phpBin);
+    $testOutput = [];
+    $testReturn = -1;
+    exec($testCmd, $testOutput, $testReturn);
+
+    return ['donnees' => [
+        'php_binary' => $phpBin,
+        'worker_path' => $workerPath,
+        'worker_exists' => file_exists($workerPath),
+        'data_dir_exists' => is_dir($dataDir),
+        'data_dir_writable' => is_writable($dataDir),
+        'jobs_dir_exists' => is_dir($jobsDir),
+        'jobs_dir_writable' => is_writable($jobsDir),
+        'exec_test' => $execTest,
+        'mini_worker_test' => ['retour' => $testReturn, 'sortie' => implode("\n", $testOutput)],
+        'cwd' => getcwd(),
+        'dir' => __DIR__,
+        'platform_embedded' => defined('PLATFORM_EMBEDDED'),
+        'platform_domain' => defined('PLATFORM_DOMAIN'),
+        'derniers_jobs' => $jobs,
+    ]];
 }
