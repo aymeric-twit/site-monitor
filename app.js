@@ -70,6 +70,9 @@ async function chargerDashboard() {
         remplirSelectsClient(cacheClients);
         remplirFiltreTendancesClient(cacheClients);
 
+        // Recap clients
+        renderRecapClients(cacheClients);
+
         // Masquer les blocs vides si aucun client
         const aucunClient = !cacheClients || cacheClients.length === 0;
         document.getElementById('cardSanteClients').style.display = aucunClient ? 'none' : '';
@@ -90,6 +93,59 @@ async function chargerDashboard() {
         console.error('chargerDashboard:', e);
         afficherToast(t('message.erreur_reseau'), 'danger');
     }
+}
+
+function renderRecapClients(clients) {
+    const tbody = document.getElementById('bodyRecapClients');
+    const rowVide = document.getElementById('rowRecapClientsVide');
+    if (!tbody) return;
+
+    tbody.querySelectorAll('tr:not(#rowRecapClientsVide)').forEach(tr => tr.remove());
+
+    if (!clients || clients.length === 0) {
+        rowVide.style.display = '';
+        return;
+    }
+    rowVide.style.display = 'none';
+
+    clients.forEach(c => {
+        const tr = document.createElement('tr');
+        tr.style.cursor = 'pointer';
+        tr.addEventListener('click', () => ouvrirDetailClient(c.id));
+
+        const taux = c.taux_reussite_dernier;
+        let tauxHtml = '<span class="text-muted">\u2014</span>';
+        if (taux !== null && taux !== undefined) {
+            const couleur = taux >= 90 ? 'text-success' : (taux >= 50 ? 'text-warning' : 'text-danger');
+            tauxHtml = `<span class="fw-bold ${couleur}">${taux}%</span>`;
+        }
+
+        const dernierStatut = c.derniere_execution
+            ? '<span class="badge bg-success">OK</span>'
+            : '<span class="badge bg-secondary">' + t('dashboard.jamais_verifie', 'Jamais') + '</span>';
+
+        tr.innerHTML = `
+            <td class="fw-semibold">${echapper(c.nom)}</td>
+            <td><span class="text-muted">${echapper(c.domaine)}</span></td>
+            <td>${c.nb_urls ?? 0}</td>
+            <td>${dernierStatut}</td>
+            <td>${tauxHtml}</td>
+            <td>
+                <div class="btn-group btn-group-sm" onclick="event.stopPropagation();">
+                    <button type="button" class="btn btn-outline-primary btn-sm" title="${t('client.voir')}" onclick="ouvrirDetailClient(${c.id})">
+                        <i class="bi bi-eye"></i>
+                    </button>
+                    <button type="button" class="btn btn-outline-success btn-sm" title="${t('client.lancer')}" onclick="ouvrirLancerVerification(${c.id})">
+                        <i class="bi bi-play-fill"></i>
+                    </button>
+                    <button type="button" class="btn btn-outline-secondary btn-sm" title="${t('client.modifier')}" onclick="ouvrirEditionClient(${c.id})">
+                        <i class="bi bi-pencil"></i>
+                    </button>
+                </div>
+            </td>
+        `;
+        tbody.appendChild(tr);
+    });
 }
 
 function remplirSelectsClient(clients) {

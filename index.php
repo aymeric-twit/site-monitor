@@ -137,6 +137,34 @@
                 </div>
             </div>
 
+            <!-- 1c. Recap clients -->
+            <div class="card mb-4" id="cardRecapClients">
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0 small" id="tableRecapClients">
+                            <thead>
+                                <tr>
+                                    <th data-i18n="table.nom">Nom</th>
+                                    <th data-i18n="table.domaine">Domaine</th>
+                                    <th data-i18n="table.urls">URLs</th>
+                                    <th data-i18n="table.dernierStatut">Dernier statut</th>
+                                    <th data-i18n="kpi.tauxReussite">Taux</th>
+                                    <th data-i18n="table.actions">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="bodyRecapClients">
+                                <tr id="rowRecapClientsVide">
+                                    <td colspan="6" class="text-center text-muted py-3">
+                                        <i class="bi bi-inbox d-block mb-1"></i>
+                                        <span data-i18n="dashboard.aucunClient">Aucun client configure.</span>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
             <!-- 2. FEED "Quoi de neuf ?" (hero section) -->
             <div class="card mb-4" id="cardChangementsFeed">
                 <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
