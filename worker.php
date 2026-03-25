@@ -65,35 +65,41 @@ function logWorker(string $message, bool $verbose = false, bool $quiet = false):
 if (isset($options['job'])) {
     $jobId = $options['job'];
 
+    // Validation initiale — ecrire les erreurs dans progress.json si possible
     if (!preg_match('#^[a-f0-9]{13,32}$#', $jobId)) {
         logWorker('Job ID invalide.', quiet: $quiet);
         exit(2);
     }
 
     $dossierJob = __DIR__ . '/data/jobs/' . $jobId;
-    if (!is_dir($dossierJob)) {
+
+    // Creer la progression le plus tot possible pour capturer les erreurs
+    $progression = null;
+    if (is_dir($dossierJob)) {
+        $progression = new ProgressionJob($dossierJob);
+        $progression->avancer(0, 'Initialisation du worker...');
+    } else {
         logWorker("Dossier job introuvable : {$dossierJob}", quiet: $quiet);
         exit(2);
     }
 
-    $configJob = json_decode(file_get_contents($dossierJob . '/config.json'), true);
-    if (!$configJob) {
-        logWorker('Configuration job invalide.', quiet: $quiet);
-        exit(2);
-    }
-
-    $progression = new ProgressionJob($dossierJob);
-    $progression->avancer(0, 'Initialisation...');
-
+    // A partir d'ici, toute erreur sera visible dans progress.json
     try {
-        // Si la config contient les credentials DB (lance depuis la plateforme),
-        // injecter la connexion MySQL avant d'appeler Connexion::obtenir()
+        $configJob = json_decode(file_get_contents($dossierJob . '/config.json'), true);
+        if (!$configJob) {
+            throw new \RuntimeException('Configuration job invalide ou fichier config.json absent');
+        }
+
+        $progression->avancer(1, 'Configuration chargee');
+
+        // Injecter la connexion MySQL si les credentials sont dans la config
         if (isset($configJob['db']) && $configJob['db']['type'] === 'mysql') {
             $dbConf = $configJob['db'];
             $dsn = sprintf(
                 'mysql:host=%s;port=%s;dbname=%s;charset=utf8mb4',
                 $dbConf['host'], $dbConf['port'], $dbConf['name']
             );
+            $progression->avancer(2, 'Connexion MySQL : ' . $dbConf['host'] . '/' . $dbConf['name']);
             $pdo = new \PDO($dsn, $dbConf['user'], $dbConf['pass'], [
                 \PDO::ATTR_ERRMODE => \PDO::ERRMODE_EXCEPTION,
                 \PDO::ATTR_DEFAULT_FETCH_MODE => \PDO::FETCH_ASSOC,
@@ -101,9 +107,13 @@ if (isset($options['job'])) {
             ]);
             Connexion::definir($pdo);
             logWorker('Connexion MySQL injectee depuis config job.', quiet: $quiet);
+        } else {
+            $progression->avancer(2, 'Mode standalone (SQLite) - pas de config DB dans le job');
+            logWorker('Pas de config DB dans le job, mode standalone.', quiet: $quiet);
         }
 
         $db = Connexion::obtenir();
+        $progression->avancer(3, 'Connexion DB OK (' . $db->getAttribute(\PDO::ATTR_DRIVER_NAME) . ')');
 
         // S'assurer que les tables existent
         try {

@@ -1477,6 +1477,15 @@ function demarrerPolling(jobId) {
                 _lastLogStep = step;
             }
 
+            // Afficher le worker_log si present (erreurs PHP du worker)
+            if (data.worker_log && !logs.dataset.workerLogShown) {
+                logs.dataset.workerLogShown = '1';
+                ajouterLog('--- Worker error log ---', 'text-warning');
+                data.worker_log.split('\n').slice(-10).forEach(l => {
+                    if (l.trim()) ajouterLog(l.trim(), 'text-danger');
+                });
+            }
+
             if (data.status === 'done' || data.status === 'completed' || data.status === 'error' || pct >= 100) {
                 if (data.status === 'error') {
                     ajouterLog('ERREUR : ' + (data.step || 'Erreur inconnue'), 'text-danger');

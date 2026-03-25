@@ -759,10 +759,17 @@ function lancerExecution(\PDO $db, DepotExecution $depot): array
         json_encode(['status' => 'starting', 'percent' => 0, 'step' => 'Demarrage...'])
     );
 
-    // Lancer le worker en arriere-plan
+    // Lancer le worker en arriere-plan (stderr vers error.log pour debug)
     $phpBin = PHP_BINARY;
     $workerPath = __DIR__ . '/worker.php';
-    $cmd = sprintf('%s %s --job=%s > /dev/null 2>&1 &', $phpBin, escapeshellarg($workerPath), $jobId);
+    $errorLog = $dossierJob . '/error.log';
+    $cmd = sprintf(
+        '%s %s --job=%s > %s 2>&1 &',
+        $phpBin,
+        escapeshellarg($workerPath),
+        $jobId,
+        escapeshellarg($errorLog)
+    );
     exec($cmd);
 
     // Décompter les crédits
