@@ -45,6 +45,7 @@ use SiteMonitor\Moteur\ComparateurExecutions;
 use SiteMonitor\Moteur\LanceurVerification;
 use SiteMonitor\Entite\Planification;
 use SiteMonitor\Stockage\DepotPlanification;
+use SiteMonitor\Indexation\ExtractionSitemap;
 
 try {
     $db = Connexion::obtenir();
@@ -413,6 +414,7 @@ function gererUrls(\PDO $db, string $action): array
         'supprimer' => supprimerUrl($depot),
         'associer_modele' => associerModeleUrl($depot),
         'dissocier_modele' => dissocierModeleUrl($depot),
+        'decouvrir_sitemap' => decouvrirSitemap($db),
         default => ['erreur' => "Action inconnue : {$action}"],
     };
 }
@@ -512,6 +514,63 @@ function creerUrlsEnLot(DepotUrl $depot): array
         'donnees' => ['creees' => $creees, 'ignorees' => $ignorees],
         'message' => "{$creees} URL(s) ajoutee(s)",
     ];
+}
+
+function decouvrirSitemap(\PDO $db): array
+{
+    $clientId = (int) ($_POST['client_id'] ?? $_GET['client_id'] ?? 0);
+    $domaine = trim($_POST['domaine'] ?? $_GET['domaine'] ?? '');
+
+    // Si pas de domaine fourni, le chercher via le client
+    if ($domaine === '' && $clientId > 0) {
+        $depotClient = new DepotClient($db);
+        $client = $depotClient->trouverParId($clientId);
+        if ($client !== null) {
+            $domaine = $client->domaine;
+        }
+    }
+
+    if ($domaine === '') {
+        return ['erreur' => 'domaine requis'];
+    }
+
+    // Normaliser le domaine
+    if (!str_starts_with($domaine, 'http')) {
+        $domaine = 'https://' . $domaine;
+    }
+
+    try {
+        $extracteur = new ExtractionSitemap();
+        $urls = $extracteur->extraireDepuisRobots($domaine);
+
+        // Grouper par premier segment de chemin pour suggestion
+        $groupes = [];
+        foreach ($urls as $url) {
+            $parsed = parse_url($url);
+            $chemin = $parsed['path'] ?? '/';
+            $segments = array_filter(explode('/', trim($chemin, '/')));
+            $premierSegment = !empty($segments) ? reset($segments) : 'racine';
+            $groupes[$premierSegment][] = $url;
+        }
+
+        // Trier par nombre d'URLs decroissant
+        uasort($groupes, fn(array $a, array $b) => count($b) - count($a));
+
+        // Limiter a 500 URLs max pour eviter les gros sitemaps
+        $urlsLimitees = array_slice($urls, 0, 500);
+
+        return ['donnees' => [
+            'urls' => $urlsLimitees,
+            'total' => count($urls),
+            'affiche' => count($urlsLimitees),
+            'groupes_suggeres' => array_map(fn(array $g) => [
+                'urls' => array_slice($g, 0, 50),
+                'total' => count($g),
+            ], array_slice($groupes, 0, 20, true)),
+        ]];
+    } catch (\Throwable $e) {
+        return ['erreur' => 'Erreur sitemap : ' . $e->getMessage()];
+    }
 }
 
 function modifierUrl(DepotUrl $depot): array

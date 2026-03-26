@@ -387,6 +387,15 @@ var TRANSLATIONS = {
         'planif.prochaine': 'Prochaine',
         'planif.creee': 'Planification activee',
         'planif.supprimee': 'Planification supprimee',
+
+        // Import sitemap
+        'sitemap.titre': 'Import depuis sitemap',
+        'sitemap.chargement': 'Analyse du sitemap en cours...',
+        'sitemap.urlsTrouvees': 'URLs trouvees',
+        'sitemap.selectionnees': 'selectionnees',
+        'sitemap.importer': 'Importer',
+        'sitemap.groupesSuggeres': 'Groupes detectes',
+        'sitemap.aucuneSelection': 'Selectionnez au moins une URL',
         'dashboard.nouvelles_defaillances': 'Nouveaux problemes',
         'dashboard.recuperations': 'Resolus',
         'dashboard.persistantes': 'Persistants',
@@ -834,6 +843,15 @@ var TRANSLATIONS = {
         'planif.prochaine': 'Next',
         'planif.creee': 'Schedule enabled',
         'planif.supprimee': 'Schedule removed',
+
+        // Sitemap import
+        'sitemap.titre': 'Import from sitemap',
+        'sitemap.chargement': 'Analyzing sitemap...',
+        'sitemap.urlsTrouvees': 'URLs found',
+        'sitemap.selectionnees': 'selected',
+        'sitemap.importer': 'Import',
+        'sitemap.groupesSuggeres': 'Detected groups',
+        'sitemap.aucuneSelection': 'Select at least one URL',
         'setup.succes': 'group(s) and',
         'dashboard.nouvelles_defaillances': 'New issues',
         'dashboard.recuperations': 'Recovered',

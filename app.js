@@ -713,6 +713,167 @@ async function supprimerPlanification() {
 }
 
 // ---------------------------------------------------------------------------
+// Import sitemap
+// ---------------------------------------------------------------------------
+
+let _sitemapUrlsDecouvertes = [];
+let _sitemapGroupesSuggeres = {};
+let _sitemapTargetClientId = null;
+let _sitemapTargetGroupeId = null;
+
+async function ouvrirImportSitemap(clientId, groupeId) {
+    _sitemapTargetClientId = clientId || detailClientActuelId;
+    _sitemapTargetGroupeId = groupeId || null;
+    _sitemapUrlsDecouvertes = [];
+
+    document.getElementById('sitemapClientId').value = _sitemapTargetClientId || '';
+    document.getElementById('sitemapChargement').style.display = '';
+    document.getElementById('sitemapResultats').style.display = 'none';
+    document.getElementById('sitemapListeUrls').innerHTML = '';
+    document.getElementById('sitemapGroupes').innerHTML = '';
+
+    const modal = bootstrap.Modal.getOrCreateInstance(document.getElementById('modalImportSitemap'));
+    modal.show();
+
+    try {
+        const res = await apiGet({ entite: 'url', action: 'decouvrir_sitemap', client_id: _sitemapTargetClientId });
+        document.getElementById('sitemapChargement').style.display = 'none';
+
+        if (res.erreur) {
+            document.getElementById('sitemapResultats').style.display = '';
+            document.getElementById('sitemapListeUrls').innerHTML = '<div class="p-3 text-danger">' + echapper(res.erreur) + '</div>';
+            return;
+        }
+
+        const data = res.donnees;
+        _sitemapUrlsDecouvertes = data.urls || [];
+        _sitemapGroupesSuggeres = data.groupes_suggeres || {};
+
+        document.getElementById('sitemapTotal').textContent = data.total || 0;
+        document.getElementById('sitemapResultats').style.display = '';
+
+        renderSitemapGroupes();
+        renderSitemapUrls('');
+    } catch (e) {
+        console.error('ouvrirImportSitemap:', e);
+        document.getElementById('sitemapChargement').style.display = 'none';
+        document.getElementById('sitemapResultats').style.display = '';
+        document.getElementById('sitemapListeUrls').innerHTML = '<div class="p-3 text-danger">' + echapper(e.message) + '</div>';
+    }
+}
+
+function renderSitemapGroupes() {
+    const container = document.getElementById('sitemapGroupes');
+    const entries = Object.entries(_sitemapGroupesSuggeres);
+    if (entries.length === 0) return;
+
+    container.innerHTML = '<label class="form-label small fw-semibold mb-1">' + t('sitemap.groupesSuggeres', 'Groupes detectes') + '</label>' +
+        '<div class="d-flex flex-wrap gap-1">' +
+        entries.slice(0, 15).map(([nom, data]) =>
+            `<button type="button" class="btn btn-outline-primary btn-sm sitemap-groupe-btn" data-groupe="${echapper(nom)}">
+                ${echapper(nom)} <span class="badge bg-primary ms-1">${data.total}</span>
+            </button>`
+        ).join('') +
+        '</div>';
+}
+
+function renderSitemapUrls(filtre) {
+    const container = document.getElementById('sitemapListeUrls');
+    const filtreLC = filtre.toLowerCase();
+
+    const urlsFiltrees = filtreLC
+        ? _sitemapUrlsDecouvertes.filter(u => u.toLowerCase().includes(filtreLC))
+        : _sitemapUrlsDecouvertes;
+
+    container.innerHTML = urlsFiltrees.slice(0, 200).map(url =>
+        `<div class="d-flex align-items-center px-2 py-1 border-bottom sitemap-url-row">
+            <input type="checkbox" class="form-check-input me-2 sitemap-url-cb" value="${echapper(url)}" checked>
+            <span class="small font-monospace text-truncate" title="${echapper(url)}">${echapper(url)}</span>
+        </div>`
+    ).join('');
+
+    if (urlsFiltrees.length > 200) {
+        container.innerHTML += '<div class="p-2 text-muted small text-center">... et ' + (urlsFiltrees.length - 200) + ' autres</div>';
+    }
+
+    majCompteurSitemap();
+}
+
+function majCompteurSitemap() {
+    const cochees = document.querySelectorAll('#sitemapListeUrls .sitemap-url-cb:checked').length;
+    document.getElementById('sitemapSelectionCount').textContent = cochees;
+}
+
+async function importerSitemapSelection() {
+    const cochees = document.querySelectorAll('#sitemapListeUrls .sitemap-url-cb:checked');
+    if (cochees.length === 0) {
+        afficherToast(t('sitemap.aucuneSelection', 'Selectionnez au moins une URL'), 'warning');
+        return;
+    }
+
+    const urls = Array.from(cochees).map(cb => cb.value);
+
+    // Si on est dans le contexte setup rapide, injecter les URLs dans un bloc groupe
+    const setupModal = document.getElementById('modalSetupRapide');
+    if (setupModal && setupModal.classList.contains('show')) {
+        // Fermer le modal sitemap et injecter dans le dernier bloc groupe du setup
+        bootstrap.Modal.getInstance(document.getElementById('modalImportSitemap'))?.hide();
+        const blocs = document.querySelectorAll('.setup-groupe-bloc');
+        const dernierBloc = blocs[blocs.length - 1];
+        if (dernierBloc) {
+            const textarea = dernierBloc.querySelector('.setup-groupe-urls');
+            textarea.value = (textarea.value ? textarea.value + '\n' : '') + urls.join('\n');
+        }
+        afficherToast(urls.length + ' URLs importees dans le setup', 'success');
+        return;
+    }
+
+    // Sinon, creer les URLs dans le groupe cible via l'API batch
+    if (!_sitemapTargetClientId) {
+        afficherToast(t('message.erreur'), 'danger');
+        return;
+    }
+
+    // Si pas de groupe cible, creer un groupe "Sitemap import"
+    let groupeId = _sitemapTargetGroupeId;
+    if (!groupeId) {
+        try {
+            const resGroupe = await apiPost({
+                entite: 'groupe', action: 'creer',
+                client_id: _sitemapTargetClientId,
+                nom: 'Import sitemap',
+            });
+            groupeId = resGroupe.donnees?.id;
+        } catch (e) {
+            afficherToast(t('message.erreur'), 'danger');
+            return;
+        }
+    }
+
+    try {
+        const res = await apiPost({
+            entite: 'url', action: 'creer_lot',
+            groupe_id: groupeId,
+            urls: urls.join('\n'),
+        });
+        if (res.erreur) {
+            afficherToast(res.erreur, 'danger');
+            return;
+        }
+        afficherToast(res.message || urls.length + ' URLs importees', 'success');
+        bootstrap.Modal.getInstance(document.getElementById('modalImportSitemap'))?.hide();
+        if (detailClientActuelId) {
+            chargerUrlsDetail(detailClientActuelId);
+            chargerGroupesDetail(detailClientActuelId);
+        }
+        chargerDashboard();
+    } catch (e) {
+        console.error('importerSitemapSelection:', e);
+        afficherToast(t('message.erreur'), 'danger');
+    }
+}
+
+// ---------------------------------------------------------------------------
 // Groupes
 // ---------------------------------------------------------------------------
 
@@ -2146,6 +2307,31 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // --- Setup rapide ---
     document.getElementById('btnSetupAjouterGroupe')?.addEventListener('click', () => ajouterBlocGroupe());
+
+    // --- Import sitemap ---
+    document.getElementById('btnSetupImportSitemap')?.addEventListener('click', () => {
+        const clientId = document.getElementById('setupClientId').value || document.getElementById('setupSelectClient').value;
+        if (clientId) ouvrirImportSitemap(clientId);
+        else afficherToast(t('setup.selectClient', 'Selectionnez un client'), 'warning');
+    });
+    document.getElementById('btnSitemapImporter')?.addEventListener('click', () => importerSitemapSelection());
+    document.getElementById('sitemapFiltre')?.addEventListener('input', (e) => renderSitemapUrls(e.target.value));
+    document.getElementById('btnSitemapToutCocher')?.addEventListener('click', () => {
+        document.querySelectorAll('#sitemapListeUrls .sitemap-url-cb').forEach(cb => { cb.checked = true; });
+        majCompteurSitemap();
+    });
+    document.getElementById('btnSitemapToutDecocher')?.addEventListener('click', () => {
+        document.querySelectorAll('#sitemapListeUrls .sitemap-url-cb').forEach(cb => { cb.checked = false; });
+        majCompteurSitemap();
+    });
+    document.getElementById('sitemapListeUrls')?.addEventListener('change', () => majCompteurSitemap());
+    document.getElementById('sitemapGroupes')?.addEventListener('click', (e) => {
+        const btn = e.target.closest('.sitemap-groupe-btn');
+        if (!btn) return;
+        const nom = btn.dataset.groupe;
+        document.getElementById('sitemapFiltre').value = '/' + nom;
+        renderSitemapUrls('/' + nom);
+    });
 
     // --- Planifications ---
     document.getElementById('btnCreerPlanif')?.addEventListener('click', () => creerPlanification());

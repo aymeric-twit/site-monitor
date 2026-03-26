@@ -1052,6 +1052,56 @@
     </div>
 </div>
 
+<!-- Modal : Import sitemap -->
+<div class="modal fade" id="modalImportSitemap" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable">
+        <div class="modal-content" style="border-radius:1rem;overflow:hidden;">
+            <div class="modal-header" style="background:var(--brand-dark);border-bottom:2.5px solid var(--brand-gold);">
+                <h5 class="modal-title text-white fw-bold">
+                    <i class="bi bi-diagram-3 me-2"></i><span data-i18n="sitemap.titre">Import depuis sitemap</span>
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="sitemapClientId" value="">
+                <!-- Barre de chargement -->
+                <div id="sitemapChargement" class="text-center py-4">
+                    <div class="spinner-border spinner-border-sm text-primary me-2" role="status"></div>
+                    <span data-i18n="sitemap.chargement">Analyse du sitemap en cours...</span>
+                </div>
+                <!-- Resultats -->
+                <div id="sitemapResultats" style="display:none;">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <span class="fw-semibold">
+                            <span id="sitemapTotal">0</span> <span data-i18n="sitemap.urlsTrouvees">URLs trouvees</span>
+                        </span>
+                        <div class="d-flex gap-2">
+                            <input type="text" class="form-control form-control-sm" id="sitemapFiltre" placeholder="Filtrer par chemin..." style="width:200px;">
+                            <button type="button" class="btn btn-outline-secondary btn-sm" id="btnSitemapToutCocher">
+                                <i class="bi bi-check-all"></i>
+                            </button>
+                            <button type="button" class="btn btn-outline-secondary btn-sm" id="btnSitemapToutDecocher">
+                                <i class="bi bi-x-lg"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <!-- Groupes suggeres -->
+                    <div id="sitemapGroupes" class="mb-3"></div>
+                    <!-- Liste URLs -->
+                    <div id="sitemapListeUrls" class="border rounded" style="max-height:300px; overflow-y:auto;"></div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <span class="me-auto small text-muted"><span id="sitemapSelectionCount">0</span> <span data-i18n="sitemap.selectionnees">selectionnees</span></span>
+                <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal" data-i18n="action.annuler">Annuler</button>
+                <button type="button" class="btn btn-primary btn-sm" id="btnSitemapImporter">
+                    <i class="bi bi-download me-1"></i><span data-i18n="sitemap.importer">Importer</span>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Modal : Setup rapide (groupes + URLs) -->
 <div class="modal fade" id="modalSetupRapide" tabindex="-1" aria-labelledby="modalSetupRapideLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable">
@@ -1075,9 +1125,14 @@
                 <!-- Zone dynamique des blocs groupe -->
                 <div id="setupGroupes"></div>
                 <!-- Bouton ajouter un groupe -->
-                <button type="button" class="btn btn-outline-primary btn-sm mt-2 mb-3" id="btnSetupAjouterGroupe">
-                    <i class="bi bi-plus-lg me-1"></i><span data-i18n="setup.ajouterGroupe">Ajouter un groupe</span>
-                </button>
+                <div class="d-flex gap-2 mt-2 mb-3">
+                    <button type="button" class="btn btn-outline-primary btn-sm" id="btnSetupAjouterGroupe">
+                        <i class="bi bi-plus-lg me-1"></i><span data-i18n="setup.ajouterGroupe">Ajouter un groupe</span>
+                    </button>
+                    <button type="button" class="btn btn-outline-secondary btn-sm" id="btnSetupImportSitemap">
+                        <i class="bi bi-diagram-3 me-1"></i><span data-i18n="sitemap.importer">Import sitemap</span>
+                    </button>
+                </div>
                 <!-- Template de regles -->
                 <hr>
                 <div class="mb-3">
