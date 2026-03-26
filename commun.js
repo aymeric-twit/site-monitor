@@ -153,7 +153,11 @@ async function apiGet(params) {
         afficherToast(t('message.quota_epuise'), 'warning');
         throw new Error('Quota epuise');
     }
-    return response.json();
+    const data = await response.json();
+    if (!response.ok && data.erreur) {
+        console.error('[API GET ' + response.status + ']', data.erreur);
+    }
+    return data;
 }
 
 /**
@@ -175,5 +179,10 @@ async function apiPost(donnees) {
         afficherToast(t('message.quota_epuise'), 'warning');
         throw new Error('Quota epuise');
     }
-    return response.json();
+    const data = await response.json();
+    if (!response.ok && data.erreur) {
+        console.error('[API 500]', data.erreur);
+        afficherToast(data.erreur, 'danger');
+    }
+    return data;
 }
