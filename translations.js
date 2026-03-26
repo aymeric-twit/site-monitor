@@ -396,6 +396,12 @@ var TRANSLATIONS = {
         'sitemap.importer': 'Importer',
         'sitemap.groupesSuggeres': 'Groupes detectes',
         'sitemap.aucuneSelection': 'Selectionnez au moins une URL',
+
+        // Diff visuel
+        'diff.titre': 'Diff de contenu',
+        'diff.changement': 'de changement',
+        'diff.texte': 'Texte',
+        'diff.identique': 'Les contenus sont identiques',
         'dashboard.nouvelles_defaillances': 'Nouveaux problemes',
         'dashboard.recuperations': 'Resolus',
         'dashboard.persistantes': 'Persistants',
@@ -852,6 +858,12 @@ var TRANSLATIONS = {
         'sitemap.importer': 'Import',
         'sitemap.groupesSuggeres': 'Detected groups',
         'sitemap.aucuneSelection': 'Select at least one URL',
+
+        // Visual diff
+        'diff.titre': 'Content diff',
+        'diff.changement': 'changed',
+        'diff.texte': 'Text',
+        'diff.identique': 'Contents are identical',
         'setup.succes': 'group(s) and',
         'dashboard.nouvelles_defaillances': 'New issues',
         'dashboard.recuperations': 'Recovered',

@@ -46,6 +46,7 @@ use SiteMonitor\Moteur\LanceurVerification;
 use SiteMonitor\Entite\Planification;
 use SiteMonitor\Stockage\DepotPlanification;
 use SiteMonitor\Indexation\ExtractionSitemap;
+use SiteMonitor\Moteur\GenerateurDiff;
 
 try {
     $db = Connexion::obtenir();
@@ -1125,6 +1126,7 @@ function genererChangementsFeed(\PDO $db, ?int $utilisateurId): array
                 $regle = $depotRegle->trouverParId($r->regleId);
                 $enrichis[] = [
                     'url' => $url?->url ?? '',
+                    'url_id' => $r->urlId,
                     'url_libelle' => $url?->libelle ?? '',
                     'client_nom' => $clientNom,
                     'client_id' => $clientId,
@@ -1244,6 +1246,7 @@ function gererSnapshots(\PDO $db, string $action): array
         'comparer' => comparerSnapshots($depot),
         'definir_baseline' => definirSnapshotBaseline($depot),
         'contenu' => obtenirContenuSnapshot($depot),
+        'diff' => genererDiffSnapshot($depot),
         default => ['erreur' => "Action inconnue : {$action}"],
     };
 }
@@ -1326,6 +1329,42 @@ function obtenirContenuSnapshot(DepotSnapshot $depot): array
         return ['erreur' => 'Snapshot introuvable ou vide'];
     }
     return ['donnees' => ['contenu' => $contenu]];
+}
+
+function genererDiffSnapshot(DepotSnapshot $depot): array
+{
+    $urlId = (int) ($_POST['url_id'] ?? $_GET['url_id'] ?? 0);
+    if ($urlId <= 0) {
+        return ['erreur' => 'url_id requis'];
+    }
+
+    $modeHtml = ($_POST['mode'] ?? $_GET['mode'] ?? 'texte') === 'html';
+
+    // Charger baseline et dernier snapshot
+    $baseline = $depot->trouverBaseline($urlId, 'body');
+    if ($baseline === null) {
+        return ['erreur' => 'Aucune baseline trouvee pour cette URL'];
+    }
+
+    $dernier = $depot->trouverDernier($urlId, 'body');
+    if ($dernier === null || $dernier->id === $baseline->id) {
+        return ['erreur' => 'Pas assez de snapshots pour comparer'];
+    }
+
+    $contenuBaseline = $depot->lireContenu($baseline->id);
+    $contenuDernier = $depot->lireContenu($dernier->id);
+
+    if ($contenuBaseline === null || $contenuDernier === null) {
+        return ['erreur' => 'Contenu des snapshots introuvable'];
+    }
+
+    $generateur = new GenerateurDiff(lignesContexte: 3);
+    $diff = $generateur->comparer($contenuBaseline, $contenuDernier, $modeHtml);
+
+    $diff['baseline_date'] = $baseline->creeLe;
+    $diff['courant_date'] = $dernier->creeLe;
+
+    return ['donnees' => $diff];
 }
 
 // === METRIQUES HTTP ===

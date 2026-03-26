@@ -1052,6 +1052,45 @@
     </div>
 </div>
 
+<!-- Modal : Diff visuel -->
+<div class="modal fade" id="modalDiff" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-fullscreen-lg-down modal-xl modal-dialog-scrollable">
+        <div class="modal-content" style="border-radius:1rem;overflow:hidden;">
+            <div class="modal-header" style="background:var(--brand-dark);border-bottom:2.5px solid var(--brand-gold);">
+                <h5 class="modal-title text-white fw-bold">
+                    <i class="bi bi-file-diff me-2"></i><span data-i18n="diff.titre">Diff de contenu</span>
+                    <span class="fw-normal ms-2 small" id="diffUrlLabel"></span>
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-0">
+                <!-- Barre resume -->
+                <div class="d-flex justify-content-between align-items-center px-3 py-2 border-bottom bg-light">
+                    <div class="small">
+                        <span class="text-success fw-bold">+<span id="diffAjoutees">0</span></span>
+                        <span class="text-danger fw-bold ms-2">-<span id="diffSupprimees">0</span></span>
+                        <span class="text-muted ms-2">(<span id="diffPourcentage">0</span>% <span data-i18n="diff.changement">de changement</span>)</span>
+                    </div>
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="small text-muted" id="diffDates"></span>
+                        <div class="btn-group btn-group-sm">
+                            <button type="button" class="btn btn-outline-secondary btn-sm active" id="btnDiffTexte" data-i18n="diff.texte">Texte</button>
+                            <button type="button" class="btn btn-outline-secondary btn-sm" id="btnDiffHtml">HTML</button>
+                        </div>
+                    </div>
+                </div>
+                <!-- Chargement -->
+                <div id="diffChargement" class="text-center py-5">
+                    <div class="spinner-border spinner-border-sm text-primary me-2"></div>
+                    <span data-i18n="message.chargement">Chargement...</span>
+                </div>
+                <!-- Contenu diff -->
+                <div id="diffContenu" class="diff-container font-monospace small" style="display:none;"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Modal : Import sitemap -->
 <div class="modal fade" id="modalImportSitemap" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable">

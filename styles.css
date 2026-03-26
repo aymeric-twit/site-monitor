@@ -1773,3 +1773,51 @@ textarea.form-control {
     #filtreChangementsFeed .btn { border-radius: 0.375rem !important; margin-bottom: 0.25rem; }
 }
 
+/* ═══════════════════════════════════════════════════════════════
+   28. DIFF VISUEL
+   ═══════════════════════════════════════════════════════════════ */
+
+.diff-container {
+    max-height: 70vh;
+    overflow-y: auto;
+}
+
+.diff-ligne {
+    padding: 1px 1rem;
+    white-space: pre-wrap;
+    word-break: break-all;
+    line-height: 1.5;
+    border-left: 3px solid transparent;
+}
+.diff-ligne-ajoute {
+    background: #d4edda;
+    border-left-color: #28a745;
+    color: #155724;
+}
+.diff-ligne-supprime {
+    background: #f8d7da;
+    border-left-color: #dc3545;
+    color: #721c24;
+    text-decoration: line-through;
+    opacity: 0.85;
+}
+.diff-ligne-contexte {
+    color: var(--text-secondary, #64748b);
+}
+.diff-ligne-separateur {
+    background: var(--bg-card-alt, #f1f5f9);
+    color: var(--text-secondary, #94a3b8);
+    text-align: center;
+    padding: 0.25rem;
+    font-style: italic;
+    font-size: 0.75rem;
+}
+
+/* Sitemap import */
+.sitemap-url-row:hover {
+    background: rgba(102, 178, 178, 0.04);
+}
+.sitemap-groupe-btn {
+    font-size: 0.75rem;
+}
+

@@ -713,6 +713,89 @@ async function supprimerPlanification() {
 }
 
 // ---------------------------------------------------------------------------
+// Diff visuel
+// ---------------------------------------------------------------------------
+
+let _diffUrlIdActuel = null;
+let _diffModeActuel = 'texte';
+
+async function ouvrirDiff(urlId, urlLabel) {
+    _diffUrlIdActuel = urlId;
+    _diffModeActuel = 'texte';
+
+    document.getElementById('diffUrlLabel').textContent = urlLabel || '';
+    document.getElementById('diffChargement').style.display = '';
+    document.getElementById('diffContenu').style.display = 'none';
+    document.getElementById('diffContenu').innerHTML = '';
+    document.getElementById('btnDiffTexte').classList.add('active');
+    document.getElementById('btnDiffHtml').classList.remove('active');
+
+    const modal = bootstrap.Modal.getOrCreateInstance(document.getElementById('modalDiff'));
+    modal.show();
+
+    await chargerDiff('texte');
+}
+
+async function chargerDiff(mode) {
+    _diffModeActuel = mode;
+    document.getElementById('diffChargement').style.display = '';
+    document.getElementById('diffContenu').style.display = 'none';
+
+    try {
+        const res = await apiGet({
+            entite: 'snapshot',
+            action: 'diff',
+            url_id: _diffUrlIdActuel,
+            mode: mode === 'html' ? 'html' : 'texte',
+        });
+
+        document.getElementById('diffChargement').style.display = 'none';
+
+        if (res.erreur) {
+            document.getElementById('diffContenu').style.display = '';
+            document.getElementById('diffContenu').innerHTML = '<div class="p-4 text-muted text-center"><i class="bi bi-info-circle me-1"></i>' + echapper(res.erreur) + '</div>';
+            return;
+        }
+
+        const data = res.donnees;
+        document.getElementById('diffAjoutees').textContent = data.lignes_ajoutees || 0;
+        document.getElementById('diffSupprimees').textContent = data.lignes_supprimees || 0;
+        document.getElementById('diffPourcentage').textContent = data.pourcentage_changement || 0;
+
+        const dates = [];
+        if (data.baseline_date) dates.push(new Date(data.baseline_date).toLocaleDateString('fr-FR'));
+        if (data.courant_date) dates.push(new Date(data.courant_date).toLocaleDateString('fr-FR'));
+        document.getElementById('diffDates').textContent = dates.join(' → ');
+
+        renderDiff(data.diff || []);
+    } catch (e) {
+        console.error('chargerDiff:', e);
+        document.getElementById('diffChargement').style.display = 'none';
+        document.getElementById('diffContenu').style.display = '';
+        document.getElementById('diffContenu').innerHTML = '<div class="p-4 text-danger">' + echapper(e.message) + '</div>';
+    }
+}
+
+function renderDiff(lignes) {
+    const container = document.getElementById('diffContenu');
+    container.style.display = '';
+
+    if (lignes.length === 0) {
+        container.innerHTML = '<div class="p-4 text-muted text-center"><i class="bi bi-check-circle text-success me-1"></i>' + t('diff.identique', 'Les contenus sont identiques') + '</div>';
+        return;
+    }
+
+    container.innerHTML = lignes.map(l => {
+        const classe = l.type === 'ajoute' ? 'diff-ligne-ajoute'
+            : l.type === 'supprime' ? 'diff-ligne-supprime'
+            : l.type === 'separateur' ? 'diff-ligne-separateur'
+            : 'diff-ligne-contexte';
+        const prefixe = l.type === 'ajoute' ? '+ ' : l.type === 'supprime' ? '- ' : l.type === 'separateur' ? '' : '  ';
+        return `<div class="diff-ligne ${classe}">${prefixe}${echapper(l.ligne)}</div>`;
+    }).join('');
+}
+
+// ---------------------------------------------------------------------------
 // Import sitemap
 // ---------------------------------------------------------------------------
 
@@ -2308,6 +2391,18 @@ document.addEventListener('DOMContentLoaded', async () => {
     // --- Setup rapide ---
     document.getElementById('btnSetupAjouterGroupe')?.addEventListener('click', () => ajouterBlocGroupe());
 
+    // --- Diff visuel ---
+    document.getElementById('btnDiffTexte')?.addEventListener('click', () => {
+        document.getElementById('btnDiffTexte').classList.add('active');
+        document.getElementById('btnDiffHtml').classList.remove('active');
+        chargerDiff('texte');
+    });
+    document.getElementById('btnDiffHtml')?.addEventListener('click', () => {
+        document.getElementById('btnDiffHtml').classList.add('active');
+        document.getElementById('btnDiffTexte').classList.remove('active');
+        chargerDiff('html');
+    });
+
     // --- Import sitemap ---
     document.getElementById('btnSetupImportSitemap')?.addEventListener('click', () => {
         const clientId = document.getElementById('setupClientId').value || document.getElementById('setupSelectClient').value;
@@ -2677,8 +2772,9 @@ function renderChangementsFeed(filtre) {
                         <div class="feed-url" title="${echapper(item.url || '')}">${echapper(urlAffichee)}</div>
                         <div class="feed-meta">${echapper(meta)}</div>
                     </div>
-                    <div class="feed-badges">
+                    <div class="feed-badges d-flex align-items-center gap-1">
                         <span class="badge-severite severite-${item.severite || 'erreur'}">${t('severite.' + (item.severite || 'erreur'))}</span>
+                        ${item.url_id ? `<button class="btn btn-outline-secondary btn-sm py-0 px-1" onclick="ouvrirDiff(${item.url_id}, '${echapper(urlAffichee).replace(/'/g, "\\'")}')" title="${t('diff.titre', 'Voir le diff')}"><i class="bi bi-file-diff"></i></button>` : ''}
                     </div>
                 </div>`;
         });
