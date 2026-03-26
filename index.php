@@ -104,9 +104,26 @@
                 </div>
             </div>
 
-            <!-- 1b. Boutons actions + Help -->
+            <!-- 1b. Sante par client + Boutons + Help -->
             <div class="row mb-4">
                 <div class="col-lg-8">
+                    <div class="card mb-3" id="cardSanteClients">
+                        <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+                            <h6 class="mb-0 fw-bold"><i class="bi bi-heart-pulse me-2"></i><span data-i18n="dashboard.sante_clients">Sante par client</span></h6>
+                            <div class="btn-group btn-group-sm" id="triSanteClients">
+                                <button type="button" class="btn btn-outline-secondary active" data-tri="score" data-i18n="dashboard.tri_score">Score</button>
+                                <button type="button" class="btn btn-outline-secondary" data-tri="alertes" data-i18n="dashboard.tri_alertes">Alertes</button>
+                                <button type="button" class="btn btn-outline-secondary" data-tri="date" data-i18n="dashboard.tri_date">Derniere verif.</button>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div class="row g-3" id="grilleSanteClients">
+                                <div class="col-12 text-center text-muted py-3" id="santeClientsVide">
+                                    <i class="bi bi-hourglass-split"></i> Chargement...
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                     <div class="d-flex gap-2 flex-wrap">
                         <button type="button" class="btn btn-primary btn-sm" id="btnAjouterClient" data-bs-toggle="modal" data-bs-target="#modalClient">
                             <i class="bi bi-plus-lg me-1"></i><span data-i18n="dashboard.ajouterClient">Ajouter un client</span>
@@ -165,38 +182,15 @@
                 </div>
             </div>
 
-            <!-- 2. Sante par client + Alertes recentes (2 colonnes) -->
-            <div class="row mb-4">
-                <div class="col-lg-8">
-                    <div class="card h-100" id="cardSanteClients">
-                        <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
-                            <h6 class="mb-0 fw-bold"><i class="bi bi-heart-pulse me-2"></i><span data-i18n="dashboard.sante_clients">Sante par client</span></h6>
-                            <div class="btn-group btn-group-sm" id="triSanteClients">
-                                <button type="button" class="btn btn-outline-secondary active" data-tri="score" data-i18n="dashboard.tri_score">Score</button>
-                                <button type="button" class="btn btn-outline-secondary" data-tri="alertes" data-i18n="dashboard.tri_alertes">Alertes</button>
-                                <button type="button" class="btn btn-outline-secondary" data-tri="date" data-i18n="dashboard.tri_date">Derniere verif.</button>
-                            </div>
-                        </div>
-                        <div class="card-body">
-                            <div class="row g-3" id="grilleSanteClients">
-                                <div class="col-12 text-center text-muted py-3" id="santeClientsVide">
-                                    <i class="bi bi-hourglass-split"></i> Chargement...
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+            <!-- Alertes recentes -->
+            <div class="card mb-4" id="cardAlertesRecentes" style="display:none;">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h6 class="mb-0 fw-bold"><i class="bi bi-bell me-2"></i><span data-i18n="alerte.recentes">Alertes</span></h6>
+                    <button type="button" class="btn btn-outline-secondary btn-sm" id="btnVoirToutesAlertes">
+                        <span data-i18n="alerte.voir_detail">Voir tout</span>
+                    </button>
                 </div>
-                <div class="col-lg-4">
-                    <div class="card h-100" id="cardAlertesRecentes" style="display:none;">
-                        <div class="card-header d-flex justify-content-between align-items-center">
-                            <h6 class="mb-0 fw-bold"><i class="bi bi-bell me-2"></i><span data-i18n="alerte.recentes">Alertes</span></h6>
-                            <button type="button" class="btn btn-outline-secondary btn-sm" id="btnVoirToutesAlertes">
-                                <span data-i18n="alerte.voir_detail">Voir tout</span>
-                            </button>
-                        </div>
-                        <div class="card-body p-2" id="listeAlertesRecentes"></div>
-                    </div>
-                </div>
+                <div class="card-body p-2" id="listeAlertesRecentes"></div>
             </div>
 
             <!-- 3. FEED "Quoi de neuf ?" -->
