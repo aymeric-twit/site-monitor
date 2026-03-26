@@ -1030,9 +1030,23 @@
                 <!-- Zone dynamique des blocs groupe -->
                 <div id="setupGroupes"></div>
                 <!-- Bouton ajouter un groupe -->
-                <button type="button" class="btn btn-outline-primary btn-sm mt-2" id="btnSetupAjouterGroupe">
+                <button type="button" class="btn btn-outline-primary btn-sm mt-2 mb-3" id="btnSetupAjouterGroupe">
                     <i class="bi bi-plus-lg me-1"></i><span data-i18n="setup.ajouterGroupe">Ajouter un groupe</span>
                 </button>
+                <!-- Template de regles -->
+                <hr>
+                <div class="mb-3">
+                    <label for="setupTemplate" class="form-label fw-semibold" data-i18n="setup.templateRegles">Template de regles</label>
+                    <select class="form-select form-select-sm" id="setupTemplate">
+                        <option value="" data-i18n="setup.aucunTemplate">-- Aucun (ajouter les regles manuellement) --</option>
+                    </select>
+                    <div class="form-text" data-i18n="setup.templateAide">Cree un modele de verification avec les regles du template et l'associe a toutes les URLs</div>
+                </div>
+                <!-- Lancer immediatement -->
+                <div class="form-check form-switch">
+                    <input class="form-check-input" type="checkbox" id="setupLancerImmediatement" checked>
+                    <label class="form-check-label" for="setupLancerImmediatement" data-i18n="setup.lancerImmediatement">Lancer la premiere verification immediatement</label>
+                </div>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal" data-i18n="action.annuler">Annuler</button>

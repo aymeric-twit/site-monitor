@@ -294,9 +294,72 @@ function creerGroupesEnLot(\PDO $db, DepotGroupeUrls $depotGroupe): array
         }
     }
 
+    // Creer un modele avec template si demande
+    $modeleId = null;
+    $reglesCreees = 0;
+    $templateCle = trim($_POST['template_modele'] ?? '');
+    if ($templateCle !== '' && $urlsCreees > 0) {
+        $reglesTemplate = RegistreTemplates::obtenir($templateCle);
+        if ($reglesTemplate !== null) {
+            $depotModele = new DepotModele($db);
+            $depotRegle = new DepotRegle($db);
+
+            // Creer le modele
+            $nomTemplate = RegistreTemplates::lister()[$templateCle]['nom'] ?? $templateCle;
+            $modele = new Modele(
+                id: null,
+                clientId: $clientId,
+                nom: $nomTemplate,
+                description: null,
+                estGlobal: false,
+                creeLe: null,
+                modifieLe: null,
+            );
+            $modeleId = $depotModele->creer($modele);
+
+            // Creer les regles
+            $ordre = 1;
+            foreach ($reglesTemplate as $def) {
+                $regle = new Regle(
+                    id: null,
+                    modeleId: $modeleId,
+                    typeRegle: $def['type_regle'],
+                    nom: $def['nom'],
+                    configuration: $def['configuration'],
+                    severite: $def['severite'],
+                    ordreTri: $ordre++,
+                    actif: true,
+                    creeLe: null,
+                    modifieLe: null,
+                );
+                $depotRegle->creer($regle);
+                $reglesCreees++;
+            }
+
+            // Associer le modele a toutes les URLs creees
+            $toutesUrls = $depotUrl->trouverActivesParClient($clientId);
+            foreach ($toutesUrls as $u) {
+                $depotUrl->associerModele($u->id, $modeleId);
+            }
+        }
+    }
+
+    // Lancer la verification si demande
+    $jobId = null;
+    if (($_POST['lancer'] ?? '') === '1' && $urlsCreees > 0) {
+        $resultatLancement = lancerExecution($db, new DepotExecution($db));
+        $jobId = $resultatLancement['donnees']['job_id'] ?? null;
+    }
+
     return [
-        'donnees' => ['groupes_crees' => $groupesCrees, 'urls_creees' => $urlsCreees],
-        'message' => "{$groupesCrees} groupe(s) et {$urlsCreees} URL(s) crees",
+        'donnees' => [
+            'groupes_crees' => $groupesCrees,
+            'urls_creees' => $urlsCreees,
+            'regles_creees' => $reglesCreees,
+            'modele_id' => $modeleId,
+            'job_id' => $jobId,
+        ],
+        'message' => "{$groupesCrees} groupe(s), {$urlsCreees} URL(s)" . ($reglesCreees > 0 ? ", {$reglesCreees} regles" : '') . ' crees',
     ];
 }
 
@@ -1024,7 +1087,24 @@ function genererChangementsFeed(\PDO $db, ?int $utilisateurId): array
         $execTerminees = array_filter($executions, fn($e) => $e->statut === StatutExecution::Termine);
         $execTerminees = array_values($execTerminees);
 
-        if (count($execTerminees) < 2) {
+        if (count($execTerminees) === 0) {
+            continue;
+        }
+
+        // 1 seule execution : afficher l'etat initial (baseline)
+        if (count($execTerminees) === 1) {
+            $actuelle = $execTerminees[0];
+            $resultats = $depotResultat->trouverParExecution($actuelle->id);
+            $echecs = array_filter($resultats, fn($r) => !$r->succes);
+            if (!empty($echecs)) {
+                $enrichisBaseline = $enrichir(array_values($echecs), $clientNom, $clientId);
+                // Marquer comme baseline
+                foreach ($enrichisBaseline as &$item) {
+                    $item['type'] = 'baseline';
+                }
+                unset($item);
+                $persistantes = array_merge($persistantes, $enrichisBaseline);
+            }
             continue;
         }
 

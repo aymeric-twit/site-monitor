@@ -307,7 +307,32 @@ function ouvrirSetupRapide(clientId, clientNom) {
         });
     }
 
+    // Peupler le select template
+    peuplerSelectSetupTemplate();
+
+    // Reset checkbox lancer
+    const cbLancer = document.getElementById('setupLancerImmediatement');
+    if (cbLancer) cbLancer.checked = true;
+
     ajouterBlocGroupe();
+}
+
+async function peuplerSelectSetupTemplate() {
+    const select = document.getElementById('setupTemplate');
+    if (!select) return;
+    select.querySelectorAll('option:not(:first-child)').forEach(o => o.remove());
+    try {
+        const res = await apiGet({ entite: 'modele', action: 'templates' });
+        if (!res.donnees) return;
+        for (const [cle, tpl] of Object.entries(res.donnees)) {
+            const opt = document.createElement('option');
+            opt.value = cle;
+            opt.textContent = tpl.nom + ' (' + tpl.nb_regles + ' regles)';
+            select.appendChild(opt);
+        }
+    } catch (e) {
+        console.error('peuplerSelectSetupTemplate:', e);
+    }
 }
 
 function ajouterBlocGroupe() {
@@ -360,12 +385,17 @@ async function sauvegarderSetupRapide() {
         return;
     }
 
+    const templateModele = document.getElementById('setupTemplate')?.value || '';
+    const lancer = document.getElementById('setupLancerImmediatement')?.checked ? '1' : '0';
+
     try {
         const res = await apiPost({
             entite: 'groupe',
             action: 'creer_lot',
             client_id: clientId,
             groupes: JSON.stringify(groupes),
+            template_modele: templateModele,
+            lancer: lancer,
         });
 
         if (res.erreur) {
@@ -374,11 +404,18 @@ async function sauvegarderSetupRapide() {
         }
 
         const d = res.donnees || {};
-        afficherToast(
-            (d.groupes_crees || 0) + ' ' + t('setup.succes', 'groupe(s) et') + ' ' + (d.urls_creees || 0) + ' URLs',
-            'success'
-        );
+        let msg = (d.groupes_crees || 0) + ' groupe(s), ' + (d.urls_creees || 0) + ' URLs';
+        if (d.regles_creees > 0) msg += ', ' + d.regles_creees + ' regles';
+        msg += ' crees';
+        afficherToast(msg, 'success');
+
         bootstrap.Modal.getInstance(document.getElementById('modalSetupRapide'))?.hide();
+
+        // Si une verification a ete lancee, demarrer le polling
+        if (d.job_id) {
+            demarrerPolling(d.job_id);
+        }
+
         chargerDashboard();
 
         // Rafraichir le detail client si ouvert
