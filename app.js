@@ -230,6 +230,7 @@ async function ouvrirEditionClient(id) {
 
 async function sauvegarderClient(e) {
     e.preventDefault();
+    console.log('[sauvegarderClient] Soumission du formulaire');
     const id = document.getElementById('clientId').value;
     const action = id ? 'modifier' : 'creer';
     const donnees = {
@@ -243,7 +244,9 @@ async function sauvegarderClient(e) {
     if (id) donnees.id = id;
 
     try {
+        console.log('[sauvegarderClient] Envoi:', JSON.stringify(donnees));
         const res = await apiPost(donnees);
+        console.log('[sauvegarderClient] Reponse:', JSON.stringify(res));
         if (res.erreur) {
             afficherToast(res.erreur, 'danger');
             return;
@@ -252,8 +255,8 @@ async function sauvegarderClient(e) {
         bootstrap.Modal.getInstance(document.getElementById('modalClient'))?.hide();
         chargerDashboard();
     } catch (e) {
-        console.error('sauvegarderClient:', e);
-        afficherToast(t('message.erreur'), 'danger');
+        console.error('sauvegarderClient ERREUR:', e);
+        afficherToast(t('message.erreur') + ' : ' + e.message, 'danger');
     }
 }
 
