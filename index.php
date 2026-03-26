@@ -946,6 +946,11 @@
                             <span class="badge bg-secondary ms-1" id="badgeModeles">0</span>
                         </button>
                     </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="tab-detail-planif" data-bs-toggle="tab" data-bs-target="#pane-detail-planif" type="button" role="tab">
+                            <i class="bi bi-clock-history me-1"></i><span data-i18n="planif.titre">Planification</span>
+                        </button>
+                    </li>
                 </ul>
 
                 <div class="tab-content" id="tabContentDetail">
@@ -996,6 +1001,46 @@
                     <div class="tab-pane fade" id="pane-detail-modeles" role="tabpanel">
                         <div id="listeModelesDetail">
                             <p class="text-muted text-center py-3" data-i18n="detail.aucunModele">Aucun modele associe a ce client.</p>
+                        </div>
+                    </div>
+                    <!-- Planification -->
+                    <div class="tab-pane fade" id="pane-detail-planif" role="tabpanel">
+                        <div id="blocPlanifExistante" style="display:none;">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <div>
+                                    <i class="bi bi-clock me-1"></i>
+                                    <strong id="planifFrequenceLabel">--</strong>
+                                    <span class="text-muted small ms-2" id="planifProchaineLabel"></span>
+                                </div>
+                                <div class="d-flex gap-2">
+                                    <div class="form-check form-switch mb-0">
+                                        <input class="form-check-input" type="checkbox" id="planifActifToggle">
+                                        <label class="form-check-label small" for="planifActifToggle" data-i18n="planif.actif">Actif</label>
+                                    </div>
+                                    <button type="button" class="btn btn-outline-danger btn-sm" id="btnSupprimerPlanif">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <div id="blocPlanifCreer">
+                            <p class="text-muted small mb-2" data-i18n="planif.aucune">Aucune verification automatique configuree.</p>
+                            <div class="row g-2 align-items-end">
+                                <div class="col-auto">
+                                    <label class="form-label small mb-1" data-i18n="planif.frequence">Frequence</label>
+                                    <select class="form-select form-select-sm" id="planifFrequence">
+                                        <option value="360">Toutes les 6h</option>
+                                        <option value="720">Toutes les 12h</option>
+                                        <option value="1440" selected>Quotidien (24h)</option>
+                                        <option value="10080">Hebdomadaire</option>
+                                    </select>
+                                </div>
+                                <div class="col-auto">
+                                    <button type="button" class="btn btn-primary btn-sm" id="btnCreerPlanif">
+                                        <i class="bi bi-clock-history me-1"></i><span data-i18n="planif.activer">Activer</span>
+                                    </button>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>

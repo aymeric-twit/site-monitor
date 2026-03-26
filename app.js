@@ -460,6 +460,7 @@ async function ouvrirDetailClient(id) {
             chargerGroupesDetail(id),
             chargerUrlsDetail(id),
             chargerModelesDetail(id),
+            chargerPlanificationDetail(id),
         ]);
 
     } catch (e) {
@@ -630,6 +631,90 @@ function reinitialiserFormGroupe() {
     document.getElementById('groupeActif').checked = true;
     document.getElementById('modalGroupeLabel').textContent = t('groupe.ajouter', 'Ajouter un groupe');
 }
+
+// ---------------------------------------------------------------------------
+// Planifications — verification automatique periodique
+// ---------------------------------------------------------------------------
+
+let _planifActuelleId = null;
+
+async function chargerPlanificationDetail(clientId) {
+    try {
+        const res = await apiGet({ entite: 'planification', action: 'lister', client_id: clientId });
+        if (res.erreur) return;
+
+        const planifs = res.donnees || [];
+        const blocExistante = document.getElementById('blocPlanifExistante');
+        const blocCreer = document.getElementById('blocPlanifCreer');
+
+        if (planifs.length > 0) {
+            const p = planifs[0];
+            _planifActuelleId = p.id;
+            blocExistante.style.display = '';
+            blocCreer.style.display = 'none';
+
+            const freqLabels = { 360: 'Toutes les 6h', 720: 'Toutes les 12h', 1440: 'Quotidien', 10080: 'Hebdomadaire' };
+            document.getElementById('planifFrequenceLabel').textContent = freqLabels[p.frequence_minutes] || (p.frequence_minutes + ' min');
+            document.getElementById('planifProchaineLabel').textContent = p.prochaine_execution
+                ? t('planif.prochaine', 'Prochaine') + ' : ' + new Date(p.prochaine_execution).toLocaleString('fr-FR')
+                : '';
+            document.getElementById('planifActifToggle').checked = !!p.actif;
+        } else {
+            _planifActuelleId = null;
+            blocExistante.style.display = 'none';
+            blocCreer.style.display = '';
+        }
+    } catch (e) {
+        console.error('chargerPlanificationDetail:', e);
+    }
+}
+
+async function creerPlanification() {
+    if (!detailClientActuelId) return;
+    const frequence = document.getElementById('planifFrequence').value;
+
+    try {
+        const res = await apiPost({
+            entite: 'planification',
+            action: 'creer',
+            client_id: detailClientActuelId,
+            frequence_minutes: frequence,
+        });
+        if (res.erreur) {
+            afficherToast(res.erreur, 'danger');
+            return;
+        }
+        afficherToast(res.message || t('planif.creee', 'Planification activee'), 'success');
+        chargerPlanificationDetail(detailClientActuelId);
+    } catch (e) {
+        console.error('creerPlanification:', e);
+        afficherToast(t('message.erreur'), 'danger');
+    }
+}
+
+async function togglePlanification(actif) {
+    if (!_planifActuelleId) return;
+    try {
+        await apiPost({ entite: 'planification', action: 'modifier', id: _planifActuelleId, actif: actif ? '1' : '0' });
+    } catch (e) {
+        console.error('togglePlanification:', e);
+    }
+}
+
+async function supprimerPlanification() {
+    if (!_planifActuelleId) return;
+    try {
+        await apiPost({ entite: 'planification', action: 'supprimer', id: _planifActuelleId });
+        afficherToast(t('planif.supprimee', 'Planification supprimee'), 'success');
+        chargerPlanificationDetail(detailClientActuelId);
+    } catch (e) {
+        console.error('supprimerPlanification:', e);
+    }
+}
+
+// ---------------------------------------------------------------------------
+// Groupes
+// ---------------------------------------------------------------------------
 
 function ouvrirAjoutGroupe(clientId) {
     reinitialiserFormGroupe();
@@ -2061,6 +2146,11 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // --- Setup rapide ---
     document.getElementById('btnSetupAjouterGroupe')?.addEventListener('click', () => ajouterBlocGroupe());
+
+    // --- Planifications ---
+    document.getElementById('btnCreerPlanif')?.addEventListener('click', () => creerPlanification());
+    document.getElementById('planifActifToggle')?.addEventListener('change', (e) => togglePlanification(e.target.checked));
+    document.getElementById('btnSupprimerPlanif')?.addEventListener('click', () => supprimerPlanification());
     document.getElementById('btnSetupEnregistrer')?.addEventListener('click', () => sauvegarderSetupRapide());
     document.getElementById('modalSetupRapide')?.addEventListener('show.bs.modal', () => {
         // Si pas pre-rempli par ouvrirSetupRapide(), ouvrir avec le select client

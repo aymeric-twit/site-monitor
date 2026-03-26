@@ -377,6 +377,16 @@ var TRANSLATIONS = {
         'setup.aucunTemplate': '\u2014 Aucun (ajouter manuellement) \u2014',
         'setup.templateAide': 'Cree un modele avec les regles du template et l\'associe aux URLs',
         'setup.lancerImmediatement': 'Lancer la premiere verification immediatement',
+
+        // Planifications
+        'planif.titre': 'Planification',
+        'planif.aucune': 'Aucune verification automatique configuree.',
+        'planif.frequence': 'Frequence',
+        'planif.activer': 'Activer',
+        'planif.actif': 'Actif',
+        'planif.prochaine': 'Prochaine',
+        'planif.creee': 'Planification activee',
+        'planif.supprimee': 'Planification supprimee',
         'dashboard.nouvelles_defaillances': 'Nouveaux problemes',
         'dashboard.recuperations': 'Resolus',
         'dashboard.persistantes': 'Persistants',
@@ -814,6 +824,16 @@ var TRANSLATIONS = {
         'setup.aucunTemplate': '\u2014 None (add rules manually) \u2014',
         'setup.templateAide': 'Creates a model with template rules and associates it to all URLs',
         'setup.lancerImmediatement': 'Run the first verification immediately',
+
+        // Scheduling
+        'planif.titre': 'Scheduling',
+        'planif.aucune': 'No automatic verification configured.',
+        'planif.frequence': 'Frequency',
+        'planif.activer': 'Enable',
+        'planif.actif': 'Active',
+        'planif.prochaine': 'Next',
+        'planif.creee': 'Schedule enabled',
+        'planif.supprimee': 'Schedule removed',
         'setup.succes': 'group(s) and',
         'dashboard.nouvelles_defaillances': 'New issues',
         'dashboard.recuperations': 'Recovered',

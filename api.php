@@ -42,6 +42,9 @@ use SiteMonitor\Stockage\DepotSnapshot;
 use SiteMonitor\Stockage\DepotUrl;
 use SiteMonitor\Moteur\RegistreTemplates;
 use SiteMonitor\Moteur\ComparateurExecutions;
+use SiteMonitor\Moteur\LanceurVerification;
+use SiteMonitor\Entite\Planification;
+use SiteMonitor\Stockage\DepotPlanification;
 
 try {
     $db = Connexion::obtenir();
@@ -72,6 +75,7 @@ try {
         'metrique' => gererMetriques($db, $action),
         'dashboard' => genererDashboard($db, $action, $utilisateurId),
         'indexation' => gererIndexation($db, $action, $utilisateurId),
+        'planification' => gererPlanifications($db, $action),
         'types_regles' => listerTypesRegles(),
         'diagnostic' => diagnosticWorker(),
         default => ['erreur' => "Entite inconnue : {$entite}"],
@@ -835,81 +839,19 @@ function lancerExecution(\PDO $db, DepotExecution $depot): array
     }
 
     $clientId = (int) ($_POST['client_id'] ?? 0);
-    $groupeId = isset($_POST['groupe_id']) ? (int) $_POST['groupe_id'] : null;
-
     if ($clientId <= 0) {
         return ['erreur' => 'client_id requis'];
     }
 
-    // Creer le job
-    $jobId = bin2hex(random_bytes(8));
-    $dossierJob = __DIR__ . '/data/jobs/' . $jobId;
-    if (!is_dir($dossierJob)) {
-        mkdir($dossierJob, 0755, true);
-    }
-
-    // Sauver la config du job avec les infos de connexion DB
-    // Le worker est lance en CLI sans contexte plateforme :
-    // il a besoin des credentials DB pour se connecter a MySQL
-    $configJob = [
+    $lanceur = new LanceurVerification($db, __DIR__);
+    $jobId = $lanceur->lancer([
         'client_id' => $clientId,
-        'groupe_id' => $groupeId,
+        'groupe_id' => isset($_POST['groupe_id']) ? (int) $_POST['groupe_id'] : null,
         'user_agent' => $_POST['user_agent'] ?? null,
         'timeout' => (int) ($_POST['timeout'] ?? 30),
-        'delai_entre_requetes_ms' => (int) ($_POST['delai_ms'] ?? 1000),
-    ];
-
-    // Lire le crawler_mode depuis module.json
-    $moduleJson = __DIR__ . '/module.json';
-    if (file_exists($moduleJson)) {
-        $moduleConfig = json_decode(file_get_contents($moduleJson), true);
-        if (!empty($moduleConfig['crawler_mode'])) {
-            $configJob['crawler_mode'] = $moduleConfig['crawler_mode'];
-        }
-    }
-
-    // Propager les infos DB de la plateforme vers le worker CLI
-    $pilote = $db->getAttribute(\PDO::ATTR_DRIVER_NAME);
-    if ($pilote === 'mysql') {
-        // Extraire host/dbname depuis le DSN
-        $dsn = '';
-        try {
-            $dsn = $db->getAttribute(\PDO::ATTR_CONNECTION_STATUS) ?: '';
-        } catch (\Throwable) {}
-        $configJob['db'] = [
-            'type' => 'mysql',
-            'host' => $_ENV['DB_HOST'] ?? getenv('DB_HOST') ?: '127.0.0.1',
-            'port' => $_ENV['DB_PORT'] ?? getenv('DB_PORT') ?: '3306',
-            'name' => $_ENV['DB_NAME'] ?? getenv('DB_NAME') ?: '',
-            'user' => $_ENV['DB_USER'] ?? getenv('DB_USER') ?: 'root',
-            'pass' => $_ENV['DB_PASSWORD'] ?? getenv('DB_PASSWORD') ?: '',
-        ];
-    }
-
-    file_put_contents(
-        $dossierJob . '/config.json',
-        json_encode($configJob, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT)
-    );
-
-    // Initialiser la progression
-    file_put_contents(
-        $dossierJob . '/progress.json',
-        json_encode(['status' => 'starting', 'percent' => 0, 'step' => 'Demarrage...'])
-    );
-
-    // Lancer le worker en arriere-plan (stderr vers error.log pour debug)
-    // PHP_BINARY peut pointer vers php-fpm en contexte FastCGI — chercher le CLI
-    $phpBin = resoudrePhpCli();
-    $workerPath = __DIR__ . '/worker.php';
-    $errorLog = $dossierJob . '/error.log';
-    $cmd = sprintf(
-        '%s %s --job=%s > %s 2>&1 &',
-        $phpBin,
-        escapeshellarg($workerPath),
-        $jobId,
-        escapeshellarg($errorLog)
-    );
-    exec($cmd);
+        'delai_ms' => (int) ($_POST['delai_ms'] ?? 1000),
+        'type_declencheur' => 'manuel',
+    ]);
 
     // Décompter les crédits
     if (class_exists(\Platform\Module\Quota::class)) {
@@ -1513,6 +1455,106 @@ function obtenirUrlsClient(\PDO $db): array
     $urls = $depotUrl->trouverActivesParClient($clientId);
 
     return ['donnees' => array_map(fn($u) => $u->url, $urls)];
+}
+
+// === PLANIFICATIONS ===
+
+function gererPlanifications(\PDO $db, string $action): array
+{
+    $depot = new DepotPlanification($db);
+
+    return match ($action) {
+        'lister' => listerPlanifications($depot),
+        'creer' => creerPlanification($depot),
+        'modifier' => modifierPlanification($depot),
+        'supprimer' => supprimerPlanification($depot),
+        default => ['erreur' => "Action inconnue : {$action}"],
+    };
+}
+
+function listerPlanifications(DepotPlanification $depot): array
+{
+    $clientId = (int) ($_POST['client_id'] ?? $_GET['client_id'] ?? 0);
+    if ($clientId <= 0) {
+        return ['erreur' => 'client_id requis'];
+    }
+    return ['donnees' => array_map(fn($p) => $p->versTableau(), $depot->trouverParClient($clientId))];
+}
+
+function creerPlanification(DepotPlanification $depot): array
+{
+    $clientId = (int) ($_POST['client_id'] ?? 0);
+    if ($clientId <= 0) {
+        return ['erreur' => 'client_id requis'];
+    }
+
+    $frequence = (int) ($_POST['frequence_minutes'] ?? 1440);
+
+    // Calculer la prochaine execution
+    $prochaine = date('Y-m-d H:i:s', time() + $frequence * 60);
+
+    $planif = new Planification(
+        id: null,
+        clientId: $clientId,
+        groupeId: isset($_POST['groupe_id']) && $_POST['groupe_id'] !== '' ? (int) $_POST['groupe_id'] : null,
+        frequenceMinutes: $frequence,
+        heureDebut: $_POST['heure_debut'] ?? null,
+        heureFin: $_POST['heure_fin'] ?? null,
+        joursSemaine: $_POST['jours_semaine'] ?? null,
+        userAgent: null,
+        headersJson: null,
+        timeoutSecondes: (int) ($_POST['timeout'] ?? 30),
+        delaiEntreRequetesMs: (int) ($_POST['delai_ms'] ?? 1000),
+        actif: true,
+        derniereExecution: null,
+        prochaineExecution: $prochaine,
+        creeLe: null,
+        modifieLe: null,
+    );
+
+    $id = $depot->creer($planif);
+    return ['donnees' => ['id' => $id], 'message' => 'Planification creee'];
+}
+
+function modifierPlanification(DepotPlanification $depot): array
+{
+    $id = (int) ($_POST['id'] ?? 0);
+    $existante = $depot->trouverParId($id);
+    if (!$existante) {
+        return ['erreur' => 'Planification introuvable'];
+    }
+
+    $frequence = (int) ($_POST['frequence_minutes'] ?? $existante->frequenceMinutes);
+    $actif = isset($_POST['actif']) ? (bool) $_POST['actif'] : $existante->actif;
+
+    $planif = new Planification(
+        id: $id,
+        clientId: $existante->clientId,
+        groupeId: $existante->groupeId,
+        frequenceMinutes: $frequence,
+        heureDebut: $_POST['heure_debut'] ?? $existante->heureDebut,
+        heureFin: $_POST['heure_fin'] ?? $existante->heureFin,
+        joursSemaine: $_POST['jours_semaine'] ?? $existante->joursSemaine,
+        userAgent: $existante->userAgent,
+        headersJson: $existante->headersJson,
+        timeoutSecondes: (int) ($_POST['timeout'] ?? $existante->timeoutSecondes),
+        delaiEntreRequetesMs: (int) ($_POST['delai_ms'] ?? $existante->delaiEntreRequetesMs),
+        actif: $actif,
+        derniereExecution: $existante->derniereExecution,
+        prochaineExecution: $existante->prochaineExecution,
+        creeLe: $existante->creeLe,
+        modifieLe: null,
+    );
+
+    $depot->modifier($planif);
+    return ['message' => 'Planification modifiee'];
+}
+
+function supprimerPlanification(DepotPlanification $depot): array
+{
+    $id = (int) ($_POST['id'] ?? 0);
+    $depot->supprimer($id);
+    return ['message' => 'Planification supprimee'];
 }
 
 // === PHP CLI RESOLUTION ===
