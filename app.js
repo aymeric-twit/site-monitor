@@ -54,11 +54,12 @@ async function chargerDashboard() {
         }
         const d = res.donnees;
 
-        // KPIs compacts (3 seulement)
-        document.getElementById('kpiClientsActifs').textContent = d.stats_clients?.actifs ?? 0;
-        document.getElementById('kpiUrlsSurveillees').textContent = d.stats_executions?.urls_surveillees ?? 0;
+        // KPIs compacts (3 seulement) — avec protection null
+        const kpi = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
+        kpi('kpiClientsActifs', d.stats_clients?.actifs ?? 0);
+        kpi('kpiUrlsSurveillees', d.stats_executions?.urls_surveillees ?? 0);
         const taux = d.stats_executions?.taux_reussite;
-        document.getElementById('kpiTauxReussite').textContent = taux !== null && taux !== undefined ? taux + '%' : '\u2014';
+        kpi('kpiTauxReussite', taux !== null && taux !== undefined ? taux + '%' : '\u2014');
 
         // Cache clients
         cacheClients = (d.clients || []).map(c => ({

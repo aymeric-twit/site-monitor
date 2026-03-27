@@ -1223,10 +1223,11 @@
 </template>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-<script src="translations.js"></script>
-<script src="commun.js"></script>
-<script src="app.js"></script>
-<script src="regles-config.js"></script>
-<script src="indexation.js"></script>
+<?php $v = '1.1.0'; ?>
+<script src="translations.js?v=<?=$v?>"></script>
+<script src="commun.js?v=<?=$v?>"></script>
+<script src="app.js?v=<?=$v?>"></script>
+<script src="regles-config.js?v=<?=$v?>"></script>
+<script src="indexation.js?v=<?=$v?>"></script>
 </body>
 </html>
