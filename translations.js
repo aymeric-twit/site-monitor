@@ -5,7 +5,7 @@ var TRANSLATIONS = {
     fr: {
         // Navigation
         'onglet.dashboard': 'Dashboard',
-        'onglet.modeles': 'Modeles',
+        'onglet.modeles': 'Regles',
         'onglet.executions': 'Executions',
 
         // Dashboard
@@ -57,15 +57,15 @@ var TRANSLATIONS = {
         'url.aucune': 'Aucune URL dans ce groupe.',
 
         // Modeles
-        'modele.titre': 'Modeles de verification',
-        'modele.ajouter': 'Ajouter un modele',
-        'modele.modifier': 'Modifier le modele',
-        'modele.nom': 'Nom du modele',
+        'modele.titre': 'Regles de surveillance',
+        'modele.ajouter': 'Creer des regles',
+        'modele.modifier': 'Modifier les regles',
+        'modele.nom': 'Nom du jeu de regles',
         'modele.description': 'Description',
-        'modele.global': 'Modele global (partage)',
+        'modele.global': 'Regles globales (partagees)',
         'modele.regles': 'Regles',
         'modele.urls_associees': 'URLs associees',
-        'modele.aucun': 'Aucun modele. Creez un modele de verification.',
+        'modele.aucun': 'Aucune regle. Creez un jeu de regles.',
 
         // Regles
         'regle.titre': 'Regles de verification',
@@ -102,7 +102,7 @@ var TRANSLATIONS = {
         'regle.selectionnez_type': 'Selectionnez un type de regle',
         'regle.parametre_modele_manquant': 'Parametre modele_id manquant',
         'regle.tous_presets': 'Tous les presets',
-        'regle.templates': 'Modeles de regles',
+        'regle.templates': 'Presets de regles',
         'modal.confirmation.titre': 'Confirmer la suppression',
         'action.confirmer': 'Confirmer',
 
@@ -123,8 +123,8 @@ var TRANSLATIONS = {
         'execution.duree': 'Duree',
         'execution.voir': 'Voir les resultats',
         'execution.aucune': 'Aucune execution. Lancez une verification.',
-        'execution.lancer': 'Lancer une verification',
-        'execution.en_cours': 'Verification en cours...',
+        'execution.lancer': 'Lancer une analyse',
+        'execution.en_cours': 'Analyse en cours...',
 
         // Statuts
         'statut.en_attente': 'En attente',
@@ -144,7 +144,7 @@ var TRANSLATIONS = {
         'resultat.message': 'Message',
 
         // Verification
-        'verification.titre': 'Lancer une verification',
+        'verification.titre': 'Lancer une analyse',
         'verification.client': 'Client a verifier',
         'verification.user_agent': 'User-Agent',
         'verification.timeout': 'Timeout (secondes)',
@@ -197,7 +197,7 @@ var TRANSLATIONS = {
         'dashboard.titreClients': 'Clients',
         'dashboard.aucunClient': 'Aucun client configure. Commencez par en ajouter un.',
         'dashboard.ajouterClient': 'Ajouter un client',
-        'dashboard.lancerVerification': 'Lancer une verification',
+        'dashboard.lancerVerification': 'Lancer une analyse',
 
         // KPIs
         'kpi.clientsActifs': 'Clients actifs',
@@ -231,7 +231,7 @@ var TRANSLATIONS = {
         // Detail client
         'detail.groupes': 'Groupes d\'URLs',
         'detail.urls': 'URLs',
-        'detail.modeles': 'Modeles de verification',
+        'detail.modeles': 'Regles de surveillance',
         'detail.tousGroupes': 'Tous les groupes',
         'detail.ajouterGroupe': 'Ajouter un groupe',
         'detail.ajouterUrl': 'Ajouter une URL',
@@ -240,9 +240,9 @@ var TRANSLATIONS = {
         'detail.aucunModele': 'Aucun modele. Creez un modele de verification.',
 
         // Modeles (onglet)
-        'modeles.titre': 'Modeles de verification',
-        'modeles.ajouter': 'Ajouter un modele',
-        'modeles.aucun': 'Aucun modele. Creez un modele de verification.',
+        'modeles.titre': 'Regles de surveillance',
+        'modeles.ajouter': 'Creer des regles',
+        'modeles.aucun': 'Aucune regle configuree.',
         'modeles.aucuneRegle': 'Aucune regle',
         'modeles.global': 'Global',
 
@@ -258,7 +258,7 @@ var TRANSLATIONS = {
         'executions.annulee': 'Annulee',
 
         // Progres
-        'progres.titre': 'Verification en cours',
+        'progres.titre': 'Analyse en cours',
         'progres.annuler': 'Annuler',
         'progres.enAttente': 'En attente...',
 
@@ -306,7 +306,7 @@ var TRANSLATIONS = {
         'modal.url.urlsAjoutees': 'URLs ajoutees',
 
         // Modal modele
-        'modal.modele.titre': 'Modele de verification',
+        'modal.modele.titre': 'Regles de surveillance',
         'modal.modele.nom': 'Nom du modele',
         'modal.modele.description': 'Description',
         'modal.modele.client': 'Client',
@@ -314,9 +314,9 @@ var TRANSLATIONS = {
         'modal.modele.aucunClient': 'Aucun client',
         'modal.modele.estGlobal': 'Modele global',
         'modal.modele.estGlobalAide': 'Un modele global est disponible pour tous les clients',
-        'modal.modele.template': 'Modele de depart',
-        'modal.modele.templateAucun': '\u2014 Aucun (modele vide) \u2014',
-        'modal.modele.templateAide': 'Les regles du template seront automatiquement ajoutees',
+        'modal.modele.template': 'Copier depuis un preset',
+        'modal.modele.templateAucun': '\u2014 Aucun (jeu vide) \u2014',
+        'modal.modele.templateAide': 'Les regles du preset seront automatiquement ajoutees',
         'modal.modele.reglesCreees': 'regles creees automatiquement',
 
         // Modal regle
@@ -330,7 +330,7 @@ var TRANSLATIONS = {
         'modal.regle.actif': 'Actif',
 
         // Modal verification
-        'modal.verification.titre': 'Lancer une verification',
+        'modal.verification.titre': 'Lancer une analyse',
         'modal.verification.client': 'Client a verifier',
         'modal.verification.choisirClient': '\u2014 Choisir un client \u2014',
         'modal.verification.groupe': 'Groupe d\'URLs',
@@ -373,9 +373,9 @@ var TRANSLATIONS = {
         'setup.urlsPlaceholder': 'URLs (une par ligne)',
         'setup.enregistrerTout': 'Enregistrer tout',
         'setup.succes': 'groupe(s) et',
-        'setup.templateRegles': 'Template de regles',
+        'setup.templateRegles': 'Preset de regles',
         'setup.aucunTemplate': '\u2014 Aucun (ajouter manuellement) \u2014',
-        'setup.templateAide': 'Cree un modele avec les regles du template et l\'associe aux URLs',
+        'setup.templateAide': 'Cree un jeu de regles depuis le preset et l'associe aux URLs' et l\'associe aux URLs',
         'setup.lancerImmediatement': 'Lancer la premiere verification immediatement',
 
         // Planifications
@@ -468,7 +468,7 @@ var TRANSLATIONS = {
     en: {
         // Navigation
         'onglet.dashboard': 'Dashboard',
-        'onglet.modeles': 'Templates',
+        'onglet.modeles': 'Rules',
         'onglet.executions': 'Executions',
 
         // Dashboard
@@ -520,15 +520,15 @@ var TRANSLATIONS = {
         'url.aucune': 'No URLs in this group.',
 
         // Templates
-        'modele.titre': 'Verification templates',
-        'modele.ajouter': 'Add a template',
-        'modele.modifier': 'Edit template',
-        'modele.nom': 'Template name',
+        'modele.titre': 'Monitoring rules',
+        'modele.ajouter': 'Create rules',
+        'modele.modifier': 'Edit rules',
+        'modele.nom': 'Rule set name',
         'modele.description': 'Description',
-        'modele.global': 'Global template (shared)',
+        'modele.global': 'Global rules (shared)',
         'modele.regles': 'Rules',
         'modele.urls_associees': 'Associated URLs',
-        'modele.aucun': 'No templates. Create a verification template.',
+        'modele.aucun': 'No rules. Create a rule set.',
 
         // Rules
         'regle.titre': 'Verification rules',
@@ -565,7 +565,7 @@ var TRANSLATIONS = {
         'regle.selectionnez_type': 'Select a rule type',
         'regle.parametre_modele_manquant': 'Missing modele_id parameter',
         'regle.tous_presets': 'All presets',
-        'regle.templates': 'Rule templates',
+        'regle.templates': 'Rule presets',
         'modal.confirmation.titre': 'Confirm deletion',
         'action.confirmer': 'Confirm',
 
@@ -585,9 +585,9 @@ var TRANSLATIONS = {
         'execution.echecs': 'Failures',
         'execution.duree': 'Duration',
         'execution.voir': 'View results',
-        'execution.aucune': 'No executions. Run a verification.',
-        'execution.lancer': 'Run a verification',
-        'execution.en_cours': 'Verification in progress...',
+        'execution.aucune': 'No executions. Run an analysis.',
+        'execution.lancer': 'Run an analysis',
+        'execution.en_cours': 'Analysis in progress...',
 
         // Statuses
         'statut.en_attente': 'Pending',
@@ -607,7 +607,7 @@ var TRANSLATIONS = {
         'resultat.message': 'Message',
 
         // Verification
-        'verification.titre': 'Run a verification',
+        'verification.titre': 'Run an analysis',
         'verification.client': 'Client to verify',
         'verification.user_agent': 'User-Agent',
         'verification.timeout': 'Timeout (seconds)',
@@ -660,7 +660,7 @@ var TRANSLATIONS = {
         'dashboard.titreClients': 'Clients',
         'dashboard.aucunClient': 'No clients configured. Start by adding one.',
         'dashboard.ajouterClient': 'Add a client',
-        'dashboard.lancerVerification': 'Run a verification',
+        'dashboard.lancerVerification': 'Lancer une analyse',
 
         // KPIs
         'kpi.clientsActifs': 'Active clients',
@@ -694,7 +694,7 @@ var TRANSLATIONS = {
         // Client detail
         'detail.groupes': 'URL Groups',
         'detail.urls': 'URLs',
-        'detail.modeles': 'Verification templates',
+        'detail.modeles': 'Monitoring rules',
         'detail.tousGroupes': 'All groups',
         'detail.ajouterGroupe': 'Add a group',
         'detail.ajouterUrl': 'Add a URL',
@@ -703,9 +703,9 @@ var TRANSLATIONS = {
         'detail.aucunModele': 'No templates. Create a verification template.',
 
         // Templates (tab)
-        'modeles.titre': 'Verification templates',
-        'modeles.ajouter': 'Add a template',
-        'modeles.aucun': 'No templates. Create a verification template.',
+        'modeles.titre': 'Monitoring rules',
+        'modeles.ajouter': 'Create rules',
+        'modeles.aucun': 'No rules configured.',
         'modeles.aucuneRegle': 'No rules',
         'modeles.global': 'Global',
 
@@ -713,7 +713,7 @@ var TRANSLATIONS = {
         'executions.titre': 'Execution history',
         'executions.tousClients': 'All clients',
         'executions.tousStatuts': 'All statuses',
-        'executions.aucune': 'No executions. Run a verification.',
+        'executions.aucune': 'No executions. Run an analysis.',
         'executions.enAttente': 'Pending',
         'executions.enCours': 'Running',
         'executions.terminee': 'Completed',
@@ -721,7 +721,7 @@ var TRANSLATIONS = {
         'executions.annulee': 'Cancelled',
 
         // Progress
-        'progres.titre': 'Verification in progress',
+        'progres.titre': 'Analysis in progress',
         'progres.annuler': 'Cancel',
         'progres.enAttente': 'Waiting...',
 
@@ -769,7 +769,7 @@ var TRANSLATIONS = {
         'modal.url.urlsAjoutees': 'URLs added',
 
         // Template modal
-        'modal.modele.titre': 'Verification template',
+        'modal.modele.titre': 'Monitoring rules',
         'modal.modele.nom': 'Template name',
         'modal.modele.description': 'Description',
         'modal.modele.client': 'Client',
@@ -777,9 +777,9 @@ var TRANSLATIONS = {
         'modal.modele.aucunClient': 'No client',
         'modal.modele.estGlobal': 'Global template',
         'modal.modele.estGlobalAide': 'A global template is available for all clients',
-        'modal.modele.template': 'Starting template',
-        'modal.modele.templateAucun': '\u2014 None (empty model) \u2014',
-        'modal.modele.templateAide': 'Template rules will be automatically added',
+        'modal.modele.template': 'Copy from preset',
+        'modal.modele.templateAucun': '\u2014 None (empty set) \u2014',
+        'modal.modele.templateAide': 'Preset rules will be automatically added',
         'modal.modele.reglesCreees': 'rules automatically created',
 
         // Rule modal
@@ -793,7 +793,7 @@ var TRANSLATIONS = {
         'modal.regle.actif': 'Active',
 
         // Verification modal
-        'modal.verification.titre': 'Run a verification',
+        'modal.verification.titre': 'Run an analysis',
         'modal.verification.client': 'Client to verify',
         'modal.verification.choisirClient': '\u2014 Choose a client \u2014',
         'modal.verification.groupe': 'URL group',
@@ -835,9 +835,9 @@ var TRANSLATIONS = {
         'setup.nomGroupe': 'Group name',
         'setup.urlsPlaceholder': 'URLs (one per line)',
         'setup.enregistrerTout': 'Save all',
-        'setup.templateRegles': 'Rule template',
+        'setup.templateRegles': 'Rule preset',
         'setup.aucunTemplate': '\u2014 None (add rules manually) \u2014',
-        'setup.templateAide': 'Creates a model with template rules and associates it to all URLs',
+        'setup.templateAide': 'Creates a rule set from preset and associates it to URLs' and associates it to all URLs',
         'setup.lancerImmediatement': 'Run the first verification immediately',
 
         // Scheduling

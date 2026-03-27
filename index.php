@@ -37,7 +37,7 @@
     <!-- ================================================================== -->
     <div id="progressSection" class="card mb-4" style="display:none;">
         <div class="card-header d-flex justify-content-between align-items-center">
-            <h6 class="mb-0 fw-bold"><i class="bi bi-arrow-repeat me-2"></i><span data-i18n="progres.titre">Verification en cours</span></h6>
+            <h6 class="mb-0 fw-bold"><i class="bi bi-arrow-repeat me-2"></i><span data-i18n="progres.titre">Analyse en cours</span></h6>
             <button type="button" class="btn btn-outline-danger btn-sm" id="btnAnnulerVerification" data-i18n="progres.annuler">Annuler</button>
         </div>
         <div class="card-body">
@@ -60,7 +60,7 @@
         </li>
         <li class="nav-item" role="presentation">
             <button class="nav-link" id="tab-modeles" data-bs-toggle="tab" data-bs-target="#pane-modeles" type="button" role="tab" aria-controls="pane-modeles" aria-selected="false">
-                <i class="bi bi-file-earmark-ruled me-1"></i><span data-i18n="onglet.modeles">Modeles</span>
+                <i class="bi bi-file-earmark-ruled me-1"></i><span data-i18n="onglet.modeles">Regles</span>
             </button>
         </li>
         <li class="nav-item" role="presentation">
@@ -142,7 +142,7 @@
                             <i class="bi bi-plus-lg me-1"></i><span data-i18n="dashboard.ajouterClient">Ajouter un client</span>
                         </button>
                         <button type="button" class="btn btn-outline-secondary btn-sm" id="btnLancerVerification" data-bs-toggle="modal" data-bs-target="#modalLancerVerification">
-                            <i class="bi bi-play-fill me-1"></i><span data-i18n="dashboard.lancerVerification">Lancer une verification</span>
+                            <i class="bi bi-play-fill me-1"></i><span data-i18n="dashboard.lancerVerification">Lancer une analyse</span>
                         </button>
                         <button type="button" class="btn btn-outline-primary btn-sm" id="btnSetupRapide" data-bs-toggle="modal" data-bs-target="#modalSetupRapide">
                             <i class="bi bi-lightning me-1"></i><span data-i18n="setup.titre">Setup rapide</span>
@@ -275,7 +275,7 @@
             <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
                 <h5 class="mb-0 fw-bold" data-i18n="modeles.titre">Modeles de verification</h5>
                 <button type="button" class="btn btn-primary btn-sm" id="btnAjouterModele" data-bs-toggle="modal" data-bs-target="#modalModele">
-                    <i class="bi bi-plus-lg me-1"></i><span data-i18n="modeles.ajouter">Creer un modele</span>
+                    <i class="bi bi-plus-lg me-1"></i><span data-i18n="modeles.ajouter">Creer des regles</span>
                 </button>
             </div>
 
@@ -732,7 +732,7 @@
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content" style="border-radius:1rem;overflow:hidden;">
             <div class="modal-header" style="background:var(--brand-dark);border-bottom:2.5px solid var(--brand-gold);">
-                <h5 class="modal-title text-white fw-bold" id="modalModeleLabel" data-i18n="modal.modele.titre">Creer un modele</h5>
+                <h5 class="modal-title text-white fw-bold" id="modalModeleLabel" data-i18n="modal.modele.titre">Creer des regles</h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fermer"></button>
             </div>
             <form id="formModele" method="POST">
@@ -846,7 +846,7 @@
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content" style="border-radius:1rem;overflow:hidden;">
             <div class="modal-header" style="background:var(--brand-dark);border-bottom:2.5px solid var(--brand-gold);">
-                <h5 class="modal-title text-white fw-bold" id="modalLancerVerificationLabel" data-i18n="modal.verification.titre">Lancer une verification</h5>
+                <h5 class="modal-title text-white fw-bold" id="modalLancerVerificationLabel" data-i18n="modal.verification.titre">Lancer une analyse</h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fermer"></button>
             </div>
             <form id="formLancerVerification" method="POST">
@@ -928,7 +928,7 @@
                             <i class="bi bi-pencil me-1"></i><span data-i18n="actions.modifier">Modifier</span>
                         </button>
                         <button type="button" class="btn btn-primary btn-sm" id="btnLancerVerifDetail">
-                            <i class="bi bi-play-fill me-1"></i><span data-i18n="dashboard.lancerVerification">Lancer une verification</span>
+                            <i class="bi bi-play-fill me-1"></i><span data-i18n="dashboard.lancerVerification">Lancer une analyse</span>
                         </button>
                     </div>
                 </div>
@@ -949,7 +949,7 @@
                     </li>
                     <li class="nav-item" role="presentation">
                         <button class="nav-link" id="tab-detail-modeles" data-bs-toggle="tab" data-bs-target="#pane-detail-modeles" type="button" role="tab">
-                            <i class="bi bi-file-earmark-ruled me-1"></i><span data-i18n="detail.modeles">Modeles</span>
+                            <i class="bi bi-file-earmark-ruled me-1"></i><span data-i18n="detail.modeles">Regles</span>
                             <span class="badge bg-secondary ms-1" id="badgeModeles">0</span>
                         </button>
                     </li>
@@ -1236,7 +1236,7 @@
 </template>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-<?php $v = '1.2.0'; ?>
+<?php $v = '1.3.0'; ?>
 <script src="translations.js?v=<?=$v?>"></script>
 <script src="commun.js?v=<?=$v?>"></script>
 <script src="app.js?v=<?=$v?>"></script>
