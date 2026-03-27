@@ -42,6 +42,25 @@ final class DepotRegle
         return array_map(fn(array $l): Regle => Regle::depuisLigne($l), $stmt->fetchAll());
     }
 
+    /**
+     * Retourne les regles actives de tous les modeles associes a un client.
+     * Utilise comme fallback quand une URL n'a pas d'associations explicites.
+     *
+     * @return Regle[]
+     */
+    public function trouverActivesParClient(int $clientId): array
+    {
+        $stmt = $this->db->prepare('
+            SELECT r.* FROM sm_regles r
+            JOIN sm_modeles m ON m.id = r.modele_id
+            WHERE (m.client_id = :client_id OR m.est_global = 1)
+              AND r.actif = 1
+            ORDER BY r.ordre_tri ASC
+        ');
+        $stmt->execute(['client_id' => $clientId]);
+        return array_map(fn(array $l): Regle => Regle::depuisLigne($l), $stmt->fetchAll());
+    }
+
     public function trouverParId(int $id): ?Regle
     {
         $stmt = $this->db->prepare('SELECT * FROM sm_regles WHERE id = :id');

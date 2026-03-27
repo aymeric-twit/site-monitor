@@ -78,6 +78,14 @@ final class MoteurVerification
 
             // Recuperer les regles associees a cette URL
             $regles = $this->depotRegle->trouverActivesParUrl($url->id);
+
+            // Fallback : utiliser les regles du client (modeles lies au client_id)
+            if (empty($regles)) {
+                $execution = $this->depotExecution->trouverParId($executionId);
+                if ($execution !== null && $execution->clientId !== null) {
+                    $regles = $this->depotRegle->trouverActivesParClient($execution->clientId);
+                }
+            }
             if (empty($regles)) {
                 $urlsTraitees++;
                 continue;
