@@ -2567,67 +2567,67 @@ async function chargerSanteParClient() {
         if (res.erreur) return;
 
         const clients = res.donnees || [];
-        const grille = document.getElementById('grilleSanteClients');
+        const tbody = document.getElementById('bodySanteClients');
         const vide = document.getElementById('santeClientsVide');
 
         if (clients.length === 0) {
-            vide.innerHTML = `<i class="bi bi-inbox"></i> ${t('dashboard.aucun_client', 'Aucun client')}`;
+            if (vide) vide.querySelector('td').innerHTML = `<i class="bi bi-inbox"></i> ${t('dashboard.aucun_client', 'Aucun client')}`;
             return;
         }
-        if (vide) vide.remove();
+        if (vide) vide.style.display = 'none';
 
-        grille.innerHTML = clients.map(c => {
+        // Supprimer les lignes existantes sauf la ligne vide
+        tbody.querySelectorAll('tr:not(#santeClientsVide)').forEach(tr => tr.remove());
+
+        clients.forEach(c => {
             const taux = c.taux_reussite_dernier;
-            const scoreText = taux !== null && taux !== undefined ? Math.round(taux) : '--';
-            const scoreClasse = classeScore(taux);
             const alertes = parseInt(c.alertes_non_lues) || 0;
             const ttfb = c.ttfb_moyen ? Math.round(c.ttfb_moyen) + 'ms' : '--';
             const derniere = tempsRelatif(c.derniere_execution);
             const clientId = c.client_id;
 
-            return `
-                <div class="col-md-6 col-xl-4 carte-sante-wrapper"
-                     data-score="${taux ?? -1}" data-alertes="${alertes}" data-date="${c.derniere_execution || ''}">
-                    <div class="carte-sante-client">
-                        <div class="carte-header">
-                            <div>
-                                <div class="carte-nom">${echapper(c.nom)}</div>
-                                <div class="carte-domaine">${echapper(c.domaine || '')}</div>
-                            </div>
-                            <div class="badge-score-sante ${scoreClasse}">${scoreText}</div>
-                        </div>
-                        <canvas class="sparkline-canvas" data-sparkline='${JSON.stringify(c.sparkline_data || [])}'></canvas>
-                        <div class="stats-mini">
-                            <div class="stat-item"><i class="bi bi-link-45deg"></i>${c.nb_urls ?? 0} URLs</div>
-                            <div class="stat-item"><i class="bi bi-bell"></i>${alertes} ${t('alerte.non_lues', 'alertes')}</div>
-                            <div class="stat-item"><i class="bi bi-speedometer2"></i>${ttfb}</div>
-                            <div class="stat-item"><i class="bi bi-clock"></i>${derniere}</div>
-                        </div>
-                        <div class="d-flex gap-2 mt-3">
-                            <button class="btn btn-outline-primary btn-sm flex-fill" onclick="ouvrirDetailClient(${clientId})">
-                                <i class="bi bi-eye me-1"></i>${t('client.voir', 'Voir')}
-                            </button>
-                            <button class="btn btn-outline-success btn-sm flex-fill" onclick="ouvrirLancerVerification(${clientId})">
-                                <i class="bi bi-play-fill me-1"></i>${t('client.lancer', 'Lancer')}
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            `;
-        }).join('');
-
-        // Dessiner les sparklines
-        grille.querySelectorAll('.sparkline-canvas').forEach(canvas => {
-            const data = JSON.parse(canvas.getAttribute('data-sparkline') || '[]');
-            if (data.length >= 2) {
-                dessinerSparkline(canvas, data);
+            let tauxHtml = '<span class="text-muted">\u2014</span>';
+            if (taux !== null && taux !== undefined) {
+                const couleur = taux >= 90 ? 'text-success' : (taux >= 50 ? 'text-warning' : 'text-danger');
+                tauxHtml = `<span class="fw-bold ${couleur}">${Math.round(taux)}%</span>`;
             }
+
+            const alertesBadge = alertes > 0
+                ? `<span class="badge bg-danger">${alertes}</span>`
+                : '<span class="text-muted">0</span>';
+
+            const tr = document.createElement('tr');
+            tr.style.cursor = 'pointer';
+            tr.addEventListener('click', () => ouvrirDetailClient(clientId));
+            tr.innerHTML = `
+                <td class="fw-semibold">${echapper(c.nom)}</td>
+                <td class="text-muted">${echapper(c.domaine || '')}</td>
+                <td>${c.nb_urls ?? 0}</td>
+                <td>${tauxHtml}</td>
+                <td>${ttfb}</td>
+                <td>${alertesBadge}</td>
+                <td class="small">${derniere}</td>
+                <td>
+                    <div class="btn-group btn-group-sm" onclick="event.stopPropagation();">
+                        <button class="btn btn-outline-primary btn-sm" onclick="ouvrirDetailClient(${clientId})" title="${t('client.voir')}">
+                            <i class="bi bi-eye"></i>
+                        </button>
+                        <button class="btn btn-outline-success btn-sm" onclick="ouvrirLancerVerification(${clientId})" title="${t('client.lancer')}">
+                            <i class="bi bi-play-fill"></i>
+                        </button>
+                    </div>
+                </td>
+            `;
+            tbody.appendChild(tr);
         });
 
     } catch (e) {
         console.error('chargerSanteParClient:', e);
         const vide = document.getElementById('santeClientsVide');
-        if (vide) vide.innerHTML = `<i class="bi bi-exclamation-triangle text-warning"></i> ${e.message || t('message.erreur')}`;
+        if (vide) {
+            vide.style.display = '';
+            vide.querySelector('td').innerHTML = `<i class="bi bi-exclamation-triangle text-warning"></i> ${e.message || t('message.erreur')}`;
+        }
     }
 }
 

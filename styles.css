@@ -1763,9 +1763,17 @@ textarea.form-control {
     color: var(--text-secondary, #64748b);
 }
 
-#filtreChangementsFeed .btn.active.btn-outline-danger  { background: #dc3545; color: #fff; border-color: #dc3545; }
-#filtreChangementsFeed .btn.active.btn-outline-success { background: #198754; color: #fff; border-color: #198754; }
-#filtreChangementsFeed .btn.active.btn-outline-warning { background: #ffc107; color: #212529; border-color: #ffc107; }
+#filtreChangementsFeed .btn.active.btn-outline-danger  { background: #dc3545 !important; color: #fff !important; border-color: #dc3545 !important; }
+#filtreChangementsFeed .btn.active.btn-outline-success { background: #198754 !important; color: #fff !important; border-color: #198754 !important; }
+#filtreChangementsFeed .btn.active.btn-outline-warning { background: #ffc107 !important; color: #212529 !important; border-color: #ffc107 !important; }
+#filtreChangementsFeed .btn.active .badge { background: rgba(255,255,255,0.3) !important; color: #fff !important; }
+#filtreChangementsFeed .btn.active span,
+#filtreChangementsFeed .btn.active i { color: inherit !important; }
+
+/* Dark mode : tables et composants */
+.table-theme { color: inherit; }
+.table-theme thead { background: var(--bg-card-alt, #f1f5f9); }
+.table-theme tbody tr:hover { background: rgba(102, 178, 178, 0.06); }
 
 @media (max-width: 768px) {
     .kpi-row-compact { grid-template-columns: 1fr !important; }

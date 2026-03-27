@@ -110,17 +110,30 @@
                     <div class="card mb-3" id="cardSanteClients">
                         <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
                             <h6 class="mb-0 fw-bold"><i class="bi bi-heart-pulse me-2"></i><span data-i18n="dashboard.sante_clients">Sante par client</span></h6>
-                            <div class="btn-group btn-group-sm" id="triSanteClients">
-                                <button type="button" class="btn btn-outline-secondary active" data-tri="score" data-i18n="dashboard.tri_score">Score</button>
-                                <button type="button" class="btn btn-outline-secondary" data-tri="alertes" data-i18n="dashboard.tri_alertes">Alertes</button>
-                                <button type="button" class="btn btn-outline-secondary" data-tri="date" data-i18n="dashboard.tri_date">Derniere verif.</button>
-                            </div>
                         </div>
-                        <div class="card-body">
-                            <div class="row g-3" id="grilleSanteClients">
-                                <div class="col-12 text-center text-muted py-3" id="santeClientsVide">
-                                    <i class="bi bi-hourglass-split"></i> Chargement...
-                                </div>
+                        <div class="card-body p-0">
+                            <div class="table-responsive">
+                                <table class="table table-hover mb-0 small table-theme" id="tableSanteClients">
+                                    <thead>
+                                        <tr>
+                                            <th data-i18n="table.nom">Nom</th>
+                                            <th data-i18n="table.domaine">Domaine</th>
+                                            <th data-i18n="table.urls">URLs</th>
+                                            <th data-i18n="kpi.tauxReussite">Taux</th>
+                                            <th>TTFB</th>
+                                            <th data-i18n="alerte.titre">Alertes</th>
+                                            <th data-i18n="table.dernierStatut">Derniere verif.</th>
+                                            <th data-i18n="table.actions">Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="bodySanteClients">
+                                        <tr id="santeClientsVide">
+                                            <td colspan="8" class="text-center text-muted py-3">
+                                                <i class="bi bi-hourglass-split"></i> Chargement...
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
                             </div>
                         </div>
                     </div>
@@ -1223,7 +1236,7 @@
 </template>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-<?php $v = '1.1.0'; ?>
+<?php $v = '1.2.0'; ?>
 <script src="translations.js?v=<?=$v?>"></script>
 <script src="commun.js?v=<?=$v?>"></script>
 <script src="app.js?v=<?=$v?>"></script>
