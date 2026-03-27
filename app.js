@@ -438,6 +438,11 @@ async function sauvegarderSetupRapide() {
 // ---------------------------------------------------------------------------
 
 async function ouvrirDetailClient(id) {
+    // Rediriger vers la page dediee client
+    window.location.href = baseUrl + '/client.php?id=' + id;
+    return;
+
+    // Ancien code modal (desactive)
     detailClientActuelId = id;
 
     try {

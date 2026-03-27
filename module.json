@@ -49,6 +49,11 @@
             "type": "ajax"
         },
         {
+            "path": "client.php",
+            "method": "GET",
+            "type": "page"
+        },
+        {
             "path": "regles.php",
             "method": "GET",
             "type": "page"
