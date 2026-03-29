@@ -104,94 +104,75 @@
                 </div>
             </div>
 
-            <!-- 1b. Sante par client + Boutons + Help -->
-            <div class="row mb-4">
-                <div class="col-lg-8">
-                    <div class="card mb-3" id="cardSanteClients">
-                        <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
-                            <h6 class="mb-0 fw-bold"><i class="bi bi-heart-pulse me-2"></i><span data-i18n="dashboard.sante_clients">Sante par client</span></h6>
-                        </div>
-                        <div class="card-body p-0">
-                            <div class="table-responsive">
-                                <table class="table table-hover mb-0 small table-theme" id="tableSanteClients">
-                                    <thead>
-                                        <tr>
-                                            <th data-i18n="table.nom">Nom</th>
-                                            <th data-i18n="table.domaine">Domaine</th>
-                                            <th data-i18n="table.urls">URLs</th>
-                                            <th data-i18n="kpi.tauxReussite">Taux</th>
-                                            <th>TTFB</th>
-                                            <th data-i18n="alerte.titre">Alertes</th>
-                                            <th data-i18n="table.dernierStatut">Derniere verif.</th>
-                                            <th data-i18n="table.actions">Actions</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="bodySanteClients">
-                                        <tr id="santeClientsVide">
-                                            <td colspan="8" class="text-center text-muted py-3">
-                                                <i class="bi bi-hourglass-split"></i> Chargement...
-                                            </td>
-                                        </tr>
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="d-flex gap-2 flex-wrap">
+            <!-- 1b. Barre de controle : selecteur client + actions -->
+            <div class="card mb-3" id="barreControle">
+                <div class="card-body py-2 px-3">
+                    <div class="d-flex align-items-center gap-2 flex-wrap">
+                        <select class="form-select form-select-sm selecteur-client" id="selecteurClient" style="width:auto; min-width:200px;">
+                            <option value="" data-i18n="dashboard.choisir_client">Choisir un client...</option>
+                        </select>
                         <button type="button" class="btn btn-primary btn-sm" id="btnAjouterClient" data-bs-toggle="modal" data-bs-target="#modalClient">
                             <i class="bi bi-plus-lg me-1"></i><span data-i18n="dashboard.ajouterClient">Ajouter un client</span>
                         </button>
-                        <button type="button" class="btn btn-outline-secondary btn-sm" id="btnLancerVerification" data-bs-toggle="modal" data-bs-target="#modalLancerVerification">
+                        <button type="button" class="btn btn-outline-success btn-sm" id="btnLancerVerifClient" style="display:none;">
                             <i class="bi bi-play-fill me-1"></i><span data-i18n="dashboard.lancerVerification">Lancer une analyse</span>
                         </button>
                         <button type="button" class="btn btn-outline-primary btn-sm" id="btnSetupRapide" data-bs-toggle="modal" data-bs-target="#modalSetupRapide">
                             <i class="bi bi-lightning me-1"></i><span data-i18n="setup.titre">Setup rapide</span>
                         </button>
-                    </div>
-                </div>
-                <div class="col-lg-4" id="helpPanel">
-                    <div id="platformCreditsSlot"></div>
-                    <div class="config-help-panel">
-                        <a class="help-title mb-2 d-flex align-items-center text-decoration-none" data-bs-toggle="collapse" href="#helpPanelBody" role="button" aria-expanded="false" aria-controls="helpPanelBody">
-                            <i class="bi bi-info-circle me-1"></i> Comment ca marche
-                            <i class="bi bi-chevron-down ms-auto small"></i>
+                        <a href="#" class="btn btn-outline-secondary btn-sm" id="btnVoirClient" style="display:none;">
+                            <i class="bi bi-box-arrow-up-right me-1"></i><span data-i18n="client.voir_detail">Detail client</span>
                         </a>
-                        <div class="collapse" id="helpPanelBody">
-                            <ul>
-                                <li><strong>Client</strong> : ajoutez un client, ses URLs et un modele de regles.</li>
-                                <li><strong>Verification</strong> : lancez une execution pour detecter les regressions.</li>
-                                <li><strong>Feed</strong> : voyez en un coup d'oeil ce qui a change.</li>
-                            </ul>
-                        </div>
+                        <div id="platformCreditsSlot" class="ms-auto"></div>
                     </div>
                 </div>
             </div>
 
-            <!-- 1c. Recap clients -->
-            <div class="card mb-4" id="cardRecapClients">
+            <!-- 1c. Tabs groupes d'URLs -->
+            <ul class="nav nav-tabs nav-tabs-groupes mb-0" id="tabsGroupes" role="tablist" style="display:none;">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" data-groupe-id="0" type="button" role="tab">
+                        <i class="bi bi-collection me-1"></i><span data-i18n="dashboard.toutes_urls">Toutes les URLs</span>
+                    </button>
+                </li>
+            </ul>
+
+            <!-- 1d. Table URLs du client selectionne -->
+            <div class="card mb-4 card-urls-dashboard" id="cardUrlsDashboard" style="display:none;">
                 <div class="card-body p-0">
                     <div class="table-responsive">
-                        <table class="table table-hover mb-0 small" id="tableRecapClients">
+                        <table class="table table-hover mb-0 small table-theme" id="tableUrlsDashboard">
                             <thead>
                                 <tr>
-                                    <th data-i18n="table.nom">Nom</th>
-                                    <th data-i18n="table.domaine">Domaine</th>
-                                    <th data-i18n="table.urls">URLs</th>
-                                    <th data-i18n="table.dernierStatut">Dernier statut</th>
-                                    <th data-i18n="kpi.tauxReussite">Taux</th>
+                                    <th style="min-width:300px;">URL</th>
+                                    <th data-i18n="table.statut">Statut</th>
+                                    <th data-i18n="table.regles">Regles</th>
+                                    <th data-i18n="table.dernierStatut">Derniere verif.</th>
+                                    <th data-i18n="table.problemes">Problemes</th>
                                     <th data-i18n="table.actions">Actions</th>
                                 </tr>
                             </thead>
-                            <tbody id="bodyRecapClients">
-                                <tr id="rowRecapClientsVide">
-                                    <td colspan="6" class="text-center text-muted py-3">
-                                        <i class="bi bi-inbox d-block mb-1"></i>
-                                        <span data-i18n="dashboard.aucunClient">Aucun client configure.</span>
+                            <tbody id="bodyUrlsDashboard">
+                                <tr id="urlsDashboardVide">
+                                    <td colspan="6" class="text-center text-muted py-4">
+                                        <i class="bi bi-arrow-up-circle d-block mb-1 fs-4"></i>
+                                        <span data-i18n="dashboard.choisir_client_invite">Selectionnez un client ci-dessus pour voir ses URLs.</span>
                                     </td>
                                 </tr>
                             </tbody>
                         </table>
                     </div>
+                </div>
+            </div>
+
+            <!-- Etat vide (aucun client) -->
+            <div class="card mb-4" id="cardAucunClient" style="display:none;">
+                <div class="card-body text-center py-5">
+                    <i class="bi bi-inbox fs-1 text-muted d-block mb-2"></i>
+                    <p class="text-muted mb-3" data-i18n="dashboard.aucunClient">Aucun client configure.</p>
+                    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalClient">
+                        <i class="bi bi-plus-lg me-1"></i><span data-i18n="dashboard.ajouterClient">Ajouter un client</span>
+                    </button>
                 </div>
             </div>
 

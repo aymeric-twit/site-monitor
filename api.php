@@ -964,6 +964,7 @@ function genererDashboard(\PDO $db, string $action, ?int $utilisateurId): array
         'changements_recents' => genererChangementsRecents($db),
         'changements_feed' => genererChangementsFeed($db, $utilisateurId),
         'tendances' => genererTendances($db),
+        'urls_par_groupe' => genererUrlsParGroupe($db),
         default => ['erreur' => "Action dashboard inconnue : {$action}"],
     };
 }
@@ -1048,6 +1049,55 @@ function genererStatsParClient(\PDO $db, ?int $utilisateurId): array
     unset($client);
 
     return ['donnees' => $stats];
+}
+
+function genererUrlsParGroupe(\PDO $db): array
+{
+    $clientId = (int) ($_POST['client_id'] ?? $_GET['client_id'] ?? 0);
+    if ($clientId <= 0) {
+        return ['erreur' => 'client_id requis'];
+    }
+    $groupeId = (int) ($_POST['groupe_id'] ?? $_GET['groupe_id'] ?? 0);
+
+    $filtreGroupe = $groupeId > 0 ? 'AND u.groupe_id = :groupe_id' : '';
+
+    $sql = "
+        SELECT
+            u.id,
+            u.url,
+            u.libelle,
+            u.groupe_id,
+            g.nom AS groupe_nom,
+            u.actif,
+            u.derniere_verification,
+            u.dernier_statut,
+            (SELECT COUNT(*) FROM sm_associations_url_modele aum
+             JOIN sm_regles r ON r.modele_id = aum.modele_id AND r.actif = 1
+             WHERE aum.url_id = u.id) AS nb_regles,
+            (SELECT COUNT(*) FROM sm_resultats res
+             JOIN sm_executions ex ON ex.id = res.execution_id
+             WHERE res.url_id = u.id AND res.succes = 0
+               AND ex.id = (
+                   SELECT MAX(e2.id) FROM sm_executions e2
+                   WHERE e2.client_id = :client_id_sub AND e2.statut = 'termine'
+               )
+            ) AS nb_echecs_derniere
+        FROM sm_urls u
+        JOIN sm_groupes_urls g ON g.id = u.groupe_id
+        WHERE g.client_id = :client_id AND u.actif = 1
+        {$filtreGroupe}
+        ORDER BY g.ordre_tri ASC, g.nom ASC, u.url ASC
+    ";
+
+    $stmt = $db->prepare($sql);
+    $stmt->bindValue(':client_id', $clientId, \PDO::PARAM_INT);
+    $stmt->bindValue(':client_id_sub', $clientId, \PDO::PARAM_INT);
+    if ($groupeId > 0) {
+        $stmt->bindValue(':groupe_id', $groupeId, \PDO::PARAM_INT);
+    }
+    $stmt->execute();
+
+    return ['donnees' => $stmt->fetchAll(\PDO::FETCH_ASSOC)];
 }
 
 function genererUrlsARisque(\PDO $db): array

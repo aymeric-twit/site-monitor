@@ -198,6 +198,9 @@ var TRANSLATIONS = {
         'dashboard.aucunClient': 'Aucun client configure. Commencez par en ajouter un.',
         'dashboard.ajouterClient': 'Ajouter un client',
         'dashboard.lancerVerification': 'Lancer une analyse',
+        'dashboard.choisir_client': 'Choisir un client...',
+        'dashboard.choisir_client_invite': 'Selectionnez un client ci-dessus pour voir ses URLs.',
+        'dashboard.toutes_urls': 'Toutes les URLs',
 
         // KPIs
         'kpi.clientsActifs': 'Clients actifs',
@@ -221,12 +224,17 @@ var TRANSLATIONS = {
         'table.actions': 'Actions',
         'table.client': 'Client',
         'table.date': 'Date',
-        'table.dernierStatut': 'Dernier statut',
+        'table.dernierStatut': 'Derniere verif.',
         'table.duree': 'Duree',
         'table.succesEchecs': 'Succes / Echecs',
         'table.groupe': 'Groupe',
         'table.libelle': 'Libelle',
         'table.url': 'URL',
+        'table.regles': 'Regles',
+        'table.problemes': 'Problemes',
+
+        // Client
+        'client.voir_detail': 'Detail client',
 
         // Detail client
         'detail.groupes': 'Groupes d\'URLs',
@@ -660,7 +668,10 @@ var TRANSLATIONS = {
         'dashboard.titreClients': 'Clients',
         'dashboard.aucunClient': 'No clients configured. Start by adding one.',
         'dashboard.ajouterClient': 'Add a client',
-        'dashboard.lancerVerification': 'Lancer une analyse',
+        'dashboard.lancerVerification': 'Run analysis',
+        'dashboard.choisir_client': 'Select a client...',
+        'dashboard.choisir_client_invite': 'Select a client above to view its URLs.',
+        'dashboard.toutes_urls': 'All URLs',
 
         // KPIs
         'kpi.clientsActifs': 'Active clients',
@@ -684,12 +695,17 @@ var TRANSLATIONS = {
         'table.actions': 'Actions',
         'table.client': 'Client',
         'table.date': 'Date',
-        'table.dernierStatut': 'Last status',
+        'table.dernierStatut': 'Last check',
         'table.duree': 'Duration',
         'table.succesEchecs': 'Success / Failures',
         'table.groupe': 'Group',
         'table.libelle': 'Label',
         'table.url': 'URL',
+        'table.regles': 'Rules',
+        'table.problemes': 'Issues',
+
+        // Client
+        'client.voir_detail': 'Client detail',
 
         // Client detail
         'detail.groupes': 'URL Groups',

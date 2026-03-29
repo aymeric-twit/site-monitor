@@ -1775,10 +1775,67 @@ textarea.form-control {
 .table-theme thead { background: var(--bg-card-alt, #f1f5f9); }
 .table-theme tbody tr:hover { background: rgba(102, 178, 178, 0.06); }
 
+/* ── SELECTEUR CLIENT ────────────────────────────────────────── */
+
+.selecteur-client {
+    font-weight: 600;
+    font-size: 0.9rem;
+    border-color: var(--brand-teal);
+    color: var(--brand-dark);
+}
+.selecteur-client:focus {
+    border-color: var(--brand-dark);
+    box-shadow: 0 0 0 0.2rem rgba(0, 76, 76, 0.15);
+}
+
+/* ── TABS GROUPES ────────────────────────────────────────────── */
+
+.nav-tabs-groupes {
+    border-bottom: 2px solid var(--border-color);
+    gap: 2px;
+}
+.nav-tabs-groupes .nav-link {
+    color: var(--text-secondary);
+    font-size: 0.82rem;
+    font-weight: 500;
+    padding: 0.5rem 1rem;
+    border: none;
+    border-bottom: 2.5px solid transparent;
+    border-radius: 6px 6px 0 0;
+    background: transparent;
+    transition: all 0.15s ease;
+}
+.nav-tabs-groupes .nav-link:hover {
+    color: var(--brand-dark);
+    background: rgba(102, 178, 178, 0.06);
+}
+.nav-tabs-groupes .nav-link.active {
+    color: var(--brand-dark);
+    font-weight: 600;
+    border-bottom-color: var(--brand-teal);
+    background: #fff;
+}
+
+/* ── CARD URLs DASHBOARD ─────────────────────────────────────── */
+
+.card-urls-dashboard {
+    border-top-left-radius: 0;
+    border-top-right-radius: 0;
+    border-top: none;
+}
+.card-urls-dashboard .url-cell {
+    color: var(--brand-teal);
+}
+.card-urls-dashboard .url-cell:hover {
+    color: var(--brand-dark);
+}
+
 @media (max-width: 768px) {
     .kpi-row-compact { grid-template-columns: 1fr !important; }
     #filtreChangementsFeed { flex-direction: column; }
     #filtreChangementsFeed .btn { border-radius: 0.375rem !important; margin-bottom: 0.25rem; }
+    .nav-tabs-groupes .nav-link { padding: 0.4rem 0.6rem; font-size: 0.75rem; }
+    .selecteur-client { min-width: 100% !important; }
 }
 
 /* ═══════════════════════════════════════════════════════════════

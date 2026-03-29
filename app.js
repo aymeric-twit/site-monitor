@@ -40,6 +40,10 @@ function changerLangue(code) {
 let cacheClients = [];
 /** Client actuellement affiche dans la modale detail. */
 let detailClientActuelId = null;
+/** Client selectionne dans le dashboard. */
+let clientSelectionneId = null;
+/** Groupes du client selectionne (cache). */
+let cacheGroupesClient = [];
 
 // ---------------------------------------------------------------------------
 // Dashboard
@@ -67,17 +71,26 @@ async function chargerDashboard() {
             id: c.id ?? c.client_id,
         }));
 
-        // Remplir les selects client dans les modales + filtre tendances
+        // Remplir les selects client (modales + selecteur dashboard)
         remplirSelectsClient(cacheClients);
         remplirFiltreTendancesClient(cacheClients);
+        peuplerSelecteurClient(cacheClients);
 
-        // Recap clients
-        renderRecapClients(cacheClients);
-
-        // Masquer les blocs vides si aucun client
+        // Gerer l'etat vide / avec clients
         const aucunClient = !cacheClients || cacheClients.length === 0;
-        document.getElementById('cardSanteClients').style.display = aucunClient ? 'none' : '';
+        document.getElementById('cardAucunClient').style.display = aucunClient ? '' : 'none';
         document.getElementById('cardTendances').style.display = aucunClient ? 'none' : '';
+
+        // Auto-selectionner le client (localStorage ou premier)
+        if (!aucunClient && !clientSelectionneId) {
+            const stocke = localStorage.getItem('sm_client_selectionne');
+            const existe = stocke && cacheClients.some(c => String(c.id) === stocke);
+            clientSelectionneId = existe ? parseInt(stocke) : cacheClients[0].id;
+            document.getElementById('selecteurClient').value = clientSelectionneId;
+            selectionnerClient(clientSelectionneId);
+        } else if (!aucunClient && clientSelectionneId) {
+            selectionnerClient(clientSelectionneId);
+        }
 
         // Alertes recentes
         renderAlertesRecentes(d.alertes_recentes || []);
@@ -86,7 +99,7 @@ async function chargerDashboard() {
         // Charger les sections en parallele
         const promesses = [chargerChangementsFeed()];
         if (!aucunClient) {
-            promesses.push(chargerSanteParClient(), chargerTendances());
+            promesses.push(chargerTendances());
         }
         Promise.all(promesses);
 
@@ -96,53 +109,207 @@ async function chargerDashboard() {
     }
 }
 
-function renderRecapClients(clients) {
-    const tbody = document.getElementById('bodyRecapClients');
-    const rowVide = document.getElementById('rowRecapClientsVide');
-    if (!tbody) return;
+// ---------------------------------------------------------------------------
+// Selecteur client + Tabs groupes + Table URLs (dashboard refonte)
+// ---------------------------------------------------------------------------
 
-    tbody.querySelectorAll('tr:not(#rowRecapClientsVide)').forEach(tr => tr.remove());
+function peuplerSelecteurClient(clients) {
+    const select = document.getElementById('selecteurClient');
+    if (!select) return;
+    select.querySelectorAll('option:not(:first-child)').forEach(o => o.remove());
+    clients.forEach(c => {
+        if (!c.actif) return;
+        const opt = document.createElement('option');
+        opt.value = c.id;
+        opt.textContent = c.nom + (c.domaine ? ' (' + c.domaine + ')' : '');
+        select.appendChild(opt);
+    });
+}
 
-    if (!clients || clients.length === 0) {
-        rowVide.style.display = '';
+async function selectionnerClient(clientId) {
+    clientSelectionneId = clientId ? parseInt(clientId) : null;
+    if (clientSelectionneId) {
+        localStorage.setItem('sm_client_selectionne', String(clientSelectionneId));
+    }
+
+    const cardUrls = document.getElementById('cardUrlsDashboard');
+    const tabsGroupes = document.getElementById('tabsGroupes');
+    const btnLancer = document.getElementById('btnLancerVerifClient');
+    const btnVoir = document.getElementById('btnVoirClient');
+
+    if (!clientSelectionneId) {
+        cardUrls.style.display = 'none';
+        tabsGroupes.style.display = 'none';
+        btnLancer.style.display = 'none';
+        btnVoir.style.display = 'none';
         return;
     }
-    rowVide.style.display = 'none';
 
-    clients.forEach(c => {
-        const tr = document.createElement('tr');
-        tr.style.cursor = 'pointer';
-        tr.addEventListener('click', () => ouvrirDetailClient(c.id));
+    // Afficher les boutons contextuels
+    btnLancer.style.display = '';
+    btnVoir.style.display = '';
+    btnVoir.href = baseUrl + '/client.php?id=' + clientSelectionneId;
 
-        const taux = c.taux_reussite_dernier;
-        let tauxHtml = '<span class="text-muted">\u2014</span>';
-        if (taux !== null && taux !== undefined) {
-            const couleur = taux >= 90 ? 'text-success' : (taux >= 50 ? 'text-warning' : 'text-danger');
-            tauxHtml = `<span class="fw-bold ${couleur}">${taux}%</span>`;
+    // Synchroniser le filtre tendances
+    const filtreTendances = document.getElementById('filtreTendancesClient');
+    if (filtreTendances) filtreTendances.value = clientSelectionneId;
+
+    // Charger les groupes
+    try {
+        const res = await apiGet({ entite: 'groupe', action: 'lister', client_id: clientSelectionneId });
+        cacheGroupesClient = res.donnees || [];
+        construireTabsGroupes(cacheGroupesClient);
+        tabsGroupes.style.display = '';
+        cardUrls.style.display = '';
+
+        // Charger toutes les URLs (tab "Toutes")
+        await chargerUrlsGroupe(clientSelectionneId, 0);
+    } catch (e) {
+        console.error('selectionnerClient:', e);
+        afficherToast(t('message.erreur_reseau'), 'danger');
+    }
+}
+
+function construireTabsGroupes(groupes) {
+    const ul = document.getElementById('tabsGroupes');
+    // Supprimer les tabs sauf "Toutes"
+    ul.querySelectorAll('li.nav-item-groupe').forEach(li => li.remove());
+
+    // Reactiver le tab "Toutes"
+    const tabToutes = ul.querySelector('[data-groupe-id="0"]');
+    ul.querySelectorAll('.nav-link').forEach(nl => nl.classList.remove('active'));
+    tabToutes.classList.add('active');
+
+    groupes.forEach(g => {
+        const li = document.createElement('li');
+        li.className = 'nav-item nav-item-groupe';
+        li.setAttribute('role', 'presentation');
+        const btn = document.createElement('button');
+        btn.className = 'nav-link';
+        btn.setAttribute('data-groupe-id', g.id);
+        btn.type = 'button';
+        btn.role = 'tab';
+        btn.innerHTML = `<i class="bi bi-folder me-1"></i>${echapper(g.nom)}`;
+        btn.addEventListener('click', () => {
+            ul.querySelectorAll('.nav-link').forEach(nl => nl.classList.remove('active'));
+            btn.classList.add('active');
+            chargerUrlsGroupe(clientSelectionneId, g.id);
+        });
+        li.appendChild(btn);
+        ul.appendChild(li);
+    });
+
+    // Re-bind le tab "Toutes"
+    tabToutes.onclick = () => {
+        ul.querySelectorAll('.nav-link').forEach(nl => nl.classList.remove('active'));
+        tabToutes.classList.add('active');
+        chargerUrlsGroupe(clientSelectionneId, 0);
+    };
+}
+
+async function chargerUrlsGroupe(clientId, groupeId) {
+    const tbody = document.getElementById('bodyUrlsDashboard');
+    const vide = document.getElementById('urlsDashboardVide');
+
+    tbody.querySelectorAll('tr:not(#urlsDashboardVide)').forEach(tr => tr.remove());
+    if (vide) {
+        vide.style.display = '';
+        vide.querySelector('td').innerHTML = '<i class="bi bi-hourglass-split"></i> Chargement...';
+    }
+
+    try {
+        const params = { entite: 'dashboard', action: 'urls_par_groupe', client_id: clientId };
+        if (groupeId > 0) params.groupe_id = groupeId;
+        const res = await apiGet(params);
+
+        if (res.erreur) {
+            if (vide) vide.querySelector('td').innerHTML = `<i class="bi bi-exclamation-triangle text-warning"></i> ${echapper(res.erreur)}`;
+            return;
         }
 
-        const dernierStatut = c.derniere_execution
-            ? '<span class="badge bg-success">OK</span>'
-            : '<span class="badge bg-secondary">' + t('dashboard.jamais_verifie', 'Jamais') + '</span>';
+        const urls = res.donnees || [];
+        if (urls.length === 0) {
+            if (vide) {
+                vide.style.display = '';
+                vide.querySelector('td').innerHTML = `<i class="bi bi-inbox d-block mb-1"></i> ${t('url.aucune', 'Aucune URL dans ce groupe.')}`;
+            }
+            return;
+        }
+
+        if (vide) vide.style.display = 'none';
+        renderTableUrls(urls, tbody);
+    } catch (e) {
+        console.error('chargerUrlsGroupe:', e);
+        if (vide) vide.querySelector('td').innerHTML = `<i class="bi bi-exclamation-triangle text-warning"></i> ${e.message}`;
+    }
+}
+
+function renderTableUrls(urls, tbody) {
+    urls.forEach(u => {
+        const tr = document.createElement('tr');
+        tr.style.cursor = 'pointer';
+        tr.addEventListener('click', () => ouvrirDetailClient(clientSelectionneId));
+
+        // Statut
+        let statutHtml;
+        switch (u.dernier_statut) {
+            case 'succes':
+                statutHtml = '<span class="badge bg-success">OK</span>';
+                break;
+            case 'echec':
+                statutHtml = '<span class="badge bg-danger">Echec</span>';
+                break;
+            case 'avertissement':
+                statutHtml = '<span class="badge bg-warning text-dark">Attention</span>';
+                break;
+            default:
+                statutHtml = '<span class="badge bg-secondary">\u2014</span>';
+        }
+
+        // Nb regles
+        const nbRegles = parseInt(u.nb_regles) || 0;
+        const reglesHtml = nbRegles > 0
+            ? `<span class="badge bg-light text-dark border">${nbRegles}</span>`
+            : '<span class="text-muted">0</span>';
+
+        // Problemes
+        const nbEchecs = parseInt(u.nb_echecs_derniere) || 0;
+        const problemesHtml = nbEchecs > 0
+            ? `<span class="badge bg-danger">${nbEchecs}</span>`
+            : '<span class="text-muted">\u2014</span>';
+
+        // Derniere verif
+        const derniere = tempsRelatif(u.derniere_verification);
+
+        // URL tronquee (afficher le path)
+        let urlAffichee;
+        try {
+            const parsed = new URL(u.url);
+            urlAffichee = parsed.pathname + parsed.search;
+            if (urlAffichee.length > 60) urlAffichee = urlAffichee.substring(0, 57) + '...';
+        } catch {
+            urlAffichee = u.url.length > 60 ? u.url.substring(0, 57) + '...' : u.url;
+        }
+
+        // Groupe (seulement en vue "Toutes")
+        const groupeLabel = u.groupe_nom ? `<span class="badge bg-light text-dark border ms-2 small">${echapper(u.groupe_nom)}</span>` : '';
 
         tr.innerHTML = `
-            <td class="fw-semibold">${echapper(c.nom)}</td>
-            <td><span class="text-muted">${echapper(c.domaine)}</span></td>
-            <td>${c.nb_urls ?? 0}</td>
-            <td>${dernierStatut}</td>
-            <td>${tauxHtml}</td>
             <td>
-                <div class="btn-group btn-group-sm" onclick="event.stopPropagation();">
-                    <button type="button" class="btn btn-outline-primary btn-sm" title="${t('client.voir')}" onclick="ouvrirDetailClient(${c.id})">
-                        <i class="bi bi-eye"></i>
-                    </button>
-                    <button type="button" class="btn btn-outline-success btn-sm" title="${t('client.lancer')}" onclick="ouvrirLancerVerification(${c.id})">
-                        <i class="bi bi-play-fill"></i>
-                    </button>
-                    <button type="button" class="btn btn-outline-secondary btn-sm" title="${t('client.modifier')}" onclick="ouvrirEditionClient(${c.id})">
-                        <i class="bi bi-pencil"></i>
-                    </button>
+                <div class="d-flex align-items-center">
+                    <a href="${echapper(u.url)}" target="_blank" rel="noopener" class="text-decoration-none font-monospace small url-cell" title="${echapper(u.url)}" onclick="event.stopPropagation();">${echapper(urlAffichee)}</a>
+                    ${groupeLabel}
                 </div>
+                ${u.libelle ? `<div class="text-muted" style="font-size:0.75rem;">${echapper(u.libelle)}</div>` : ''}
+            </td>
+            <td>${statutHtml}</td>
+            <td>${reglesHtml}</td>
+            <td class="small text-muted">${derniere}</td>
+            <td>${problemesHtml}</td>
+            <td>
+                <button class="btn btn-outline-primary btn-xs" onclick="event.stopPropagation(); ouvrirDetailClient(${clientSelectionneId})" title="${t('client.voir_detail', 'Voir le detail')}">
+                    <i class="bi bi-eye"></i>
+                </button>
             </td>
         `;
         tbody.appendChild(tr);
@@ -421,12 +588,6 @@ async function sauvegarderSetupRapide() {
         }
 
         chargerDashboard();
-
-        // Rafraichir le detail client si ouvert
-        if (detailClientActuelId) {
-            chargerGroupesDetail(detailClientActuelId);
-            chargerUrlsDetail(detailClientActuelId);
-        }
     } catch (e) {
         console.error('sauvegarderSetupRapide:', e);
         afficherToast(t('message.erreur'), 'danger');
@@ -437,197 +598,10 @@ async function sauvegarderSetupRapide() {
 // Detail Client (modale drilldown)
 // ---------------------------------------------------------------------------
 
-async function ouvrirDetailClient(id) {
-    // Rediriger vers la page dediee client
+function ouvrirDetailClient(id) {
     window.location.href = baseUrl + '/client.php?id=' + id;
-    return;
-
-    // Ancien code modal (desactive)
-    detailClientActuelId = id;
-
-    try {
-        const res = await apiGet({ entite: 'client', action: 'obtenir', id });
-        if (res.erreur) {
-            afficherToast(res.erreur, 'danger');
-            return;
-        }
-        const c = res.donnees;
-
-        document.getElementById('detailClientNom').textContent = c.nom || '';
-        document.getElementById('detailClientDomaine').textContent = c.domaine || '';
-        document.getElementById('detailClientEmail').textContent = c.email_contact || '\u2014';
-
-        // Reinitialiser sur le premier onglet
-        const tabGroupes = document.getElementById('tab-detail-groupes');
-        if (tabGroupes) bootstrap.Tab.getOrCreateInstance(tabGroupes).show();
-
-        const modal = bootstrap.Modal.getOrCreateInstance(document.getElementById('modalDetailClient'));
-        modal.show();
-
-        // Charger les sous-donnees en parallele
-        await Promise.all([
-            chargerGroupesDetail(id),
-            chargerUrlsDetail(id),
-            chargerModelesDetail(id),
-            chargerPlanificationDetail(id),
-        ]);
-
-    } catch (e) {
-        console.error('ouvrirDetailClient:', e);
-        afficherToast(t('message.erreur'), 'danger');
-    }
 }
 
-async function chargerGroupesDetail(clientId) {
-    try {
-        const res = await apiGet({ entite: 'groupe', action: 'lister', client_id: clientId });
-        const groupes = res.donnees || [];
-        document.getElementById('badgeGroupes').textContent = groupes.length;
-
-        const conteneur = document.getElementById('listeGroupesDetail');
-        if (groupes.length === 0) {
-            conteneur.innerHTML = `<p class="text-muted text-center py-3">${t('groupe.aucun', 'Aucun groupe.')}</p>`;
-            return;
-        }
-
-        // Remplir le select de filtre URLs
-        const filtre = document.getElementById('filtreGroupeUrlsDetail');
-        if (filtre) {
-            filtre.querySelectorAll('option:not(:first-child)').forEach(o => o.remove());
-            groupes.forEach(g => {
-                const opt = document.createElement('option');
-                opt.value = g.id;
-                opt.textContent = g.nom;
-                filtre.appendChild(opt);
-            });
-        }
-
-        let html = '';
-        groupes.forEach(g => {
-            const statutBadge = g.actif
-                ? '<span class="badge bg-success">Actif</span>'
-                : '<span class="badge bg-secondary">Inactif</span>';
-            html += `
-                <div class="card mb-2">
-                    <div class="card-body py-2 px-3 d-flex justify-content-between align-items-center">
-                        <div>
-                            <strong>${echapper(g.nom)}</strong>
-                            <small class="text-muted ms-2">${echapper(g.description || '')}</small>
-                        </div>
-                        <div class="d-flex align-items-center gap-2">
-                            ${statutBadge}
-                            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="ouvrirEditionGroupe(${g.id})" title="${t('groupe.modifier')}">
-                                <i class="bi bi-pencil"></i>
-                            </button>
-                            <button type="button" class="btn btn-sm btn-outline-danger" onclick="supprimerGroupe(${g.id}, '${echapper(g.nom)}')" title="${t('client.supprimer')}">
-                                <i class="bi bi-trash"></i>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            `;
-        });
-        conteneur.innerHTML = html;
-
-    } catch (e) {
-        console.error('chargerGroupesDetail:', e);
-    }
-}
-
-async function chargerUrlsDetail(clientId) {
-    try {
-        // Recuperer les groupes d'abord pour charger les URLs de chaque groupe
-        const resGroupes = await apiGet({ entite: 'groupe', action: 'lister', client_id: clientId });
-        const groupes = resGroupes.donnees || [];
-
-        let toutesUrls = [];
-        for (const g of groupes) {
-            const resUrls = await apiGet({ entite: 'url', action: 'lister', groupe_id: g.id });
-            const urls = (resUrls.donnees || []).map(u => ({ ...u, nom_groupe: g.nom }));
-            toutesUrls = toutesUrls.concat(urls);
-        }
-
-        document.getElementById('badgeUrls').textContent = toutesUrls.length;
-
-        const tbody = document.getElementById('bodyUrlsDetail');
-        if (toutesUrls.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="5" class="text-center text-muted py-3">${t('url.aucune', 'Aucune URL configuree.')}</td></tr>`;
-            return;
-        }
-
-        let html = '';
-        toutesUrls.forEach(u => {
-            const statutBadge = u.dernier_statut
-                ? `<span class="badge ${u.dernier_statut === 'succes' ? 'bg-success' : 'bg-danger'}">${echapper(u.dernier_statut)}</span>`
-                : '<span class="badge bg-secondary">\u2014</span>';
-            const urlAffichee = u.url.length > 60 ? u.url.substring(0, 57) + '...' : u.url;
-            html += `
-                <tr>
-                    <td><a href="${echapper(u.url)}" target="_blank" rel="noopener" class="text-decoration-none small">${echapper(urlAffichee)}</a></td>
-                    <td class="small">${echapper(u.libelle || '')}</td>
-                    <td class="small">${echapper(u.nom_groupe || '')}</td>
-                    <td>${statutBadge}</td>
-                    <td>
-                        <div class="btn-group btn-group-sm">
-                            <button type="button" class="btn btn-outline-secondary btn-sm" onclick="ouvrirEditionUrl(${u.id})" title="${t('url.modifier')}">
-                                <i class="bi bi-pencil"></i>
-                            </button>
-                            <button type="button" class="btn btn-outline-danger btn-sm" onclick="supprimerUrl(${u.id})" title="${t('client.supprimer')}">
-                                <i class="bi bi-trash"></i>
-                            </button>
-                        </div>
-                    </td>
-                </tr>
-            `;
-        });
-        tbody.innerHTML = html;
-
-        // Stocker les URLs pour le filtre local
-        window._detailUrls = toutesUrls;
-
-    } catch (e) {
-        console.error('chargerUrlsDetail:', e);
-    }
-}
-
-async function chargerModelesDetail(clientId) {
-    try {
-        const res = await apiGet({ entite: 'modele', action: 'lister' });
-        const tousModeles = res.donnees || [];
-        // Modeles associes a ce client ou globaux
-        const modeles = tousModeles.filter(m => m.est_global || String(m.client_id) === String(clientId) || !m.client_id);
-
-        document.getElementById('badgeModeles').textContent = modeles.length;
-
-        const conteneur = document.getElementById('listeModelesDetail');
-        if (modeles.length === 0) {
-            conteneur.innerHTML = `<p class="text-muted text-center py-3">${t('modele.aucun', 'Aucun modele associe.')}</p>`;
-            return;
-        }
-
-        let html = '';
-        modeles.forEach(m => {
-            const globalBadge = m.est_global
-                ? '<span class="badge bg-info ms-1">Global</span>'
-                : '';
-            html += `
-                <div class="card mb-2">
-                    <div class="card-body py-2 px-3 d-flex justify-content-between align-items-center">
-                        <div>
-                            <strong>${echapper(m.nom)}</strong>${globalBadge}
-                            <small class="text-muted ms-2">${echapper(m.description || '')}</small>
-                        </div>
-                        <span class="badge bg-secondary">${m.nombre_regles ?? 0} ${t('modele.regles', 'regles')}</span>
-                    </div>
-                </div>
-            `;
-        });
-        conteneur.innerHTML = html;
-
-    } catch (e) {
-        console.error('chargerModelesDetail:', e);
-    }
-}
 
 // ---------------------------------------------------------------------------
 // Groupes : CRUD
@@ -639,86 +613,6 @@ function reinitialiserFormGroupe() {
     document.getElementById('groupeId').value = '';
     document.getElementById('groupeActif').checked = true;
     document.getElementById('modalGroupeLabel').textContent = t('groupe.ajouter', 'Ajouter un groupe');
-}
-
-// ---------------------------------------------------------------------------
-// Planifications — verification automatique periodique
-// ---------------------------------------------------------------------------
-
-let _planifActuelleId = null;
-
-async function chargerPlanificationDetail(clientId) {
-    try {
-        const res = await apiGet({ entite: 'planification', action: 'lister', client_id: clientId });
-        if (res.erreur) return;
-
-        const planifs = res.donnees || [];
-        const blocExistante = document.getElementById('blocPlanifExistante');
-        const blocCreer = document.getElementById('blocPlanifCreer');
-
-        if (planifs.length > 0) {
-            const p = planifs[0];
-            _planifActuelleId = p.id;
-            blocExistante.style.display = '';
-            blocCreer.style.display = 'none';
-
-            const freqLabels = { 360: 'Toutes les 6h', 720: 'Toutes les 12h', 1440: 'Quotidien', 10080: 'Hebdomadaire' };
-            document.getElementById('planifFrequenceLabel').textContent = freqLabels[p.frequence_minutes] || (p.frequence_minutes + ' min');
-            document.getElementById('planifProchaineLabel').textContent = p.prochaine_execution
-                ? t('planif.prochaine', 'Prochaine') + ' : ' + new Date(p.prochaine_execution).toLocaleString('fr-FR')
-                : '';
-            document.getElementById('planifActifToggle').checked = !!p.actif;
-        } else {
-            _planifActuelleId = null;
-            blocExistante.style.display = 'none';
-            blocCreer.style.display = '';
-        }
-    } catch (e) {
-        console.error('chargerPlanificationDetail:', e);
-    }
-}
-
-async function creerPlanification() {
-    if (!detailClientActuelId) return;
-    const frequence = document.getElementById('planifFrequence').value;
-
-    try {
-        const res = await apiPost({
-            entite: 'planification',
-            action: 'creer',
-            client_id: detailClientActuelId,
-            frequence_minutes: frequence,
-        });
-        if (res.erreur) {
-            afficherToast(res.erreur, 'danger');
-            return;
-        }
-        afficherToast(res.message || t('planif.creee', 'Planification activee'), 'success');
-        chargerPlanificationDetail(detailClientActuelId);
-    } catch (e) {
-        console.error('creerPlanification:', e);
-        afficherToast(t('message.erreur'), 'danger');
-    }
-}
-
-async function togglePlanification(actif) {
-    if (!_planifActuelleId) return;
-    try {
-        await apiPost({ entite: 'planification', action: 'modifier', id: _planifActuelleId, actif: actif ? '1' : '0' });
-    } catch (e) {
-        console.error('togglePlanification:', e);
-    }
-}
-
-async function supprimerPlanification() {
-    if (!_planifActuelleId) return;
-    try {
-        await apiPost({ entite: 'planification', action: 'supprimer', id: _planifActuelleId });
-        afficherToast(t('planif.supprimee', 'Planification supprimee'), 'success');
-        chargerPlanificationDetail(detailClientActuelId);
-    } catch (e) {
-        console.error('supprimerPlanification:', e);
-    }
 }
 
 // ---------------------------------------------------------------------------
@@ -954,10 +848,6 @@ async function importerSitemapSelection() {
         }
         afficherToast(res.message || urls.length + ' URLs importees', 'success');
         bootstrap.Modal.getInstance(document.getElementById('modalImportSitemap'))?.hide();
-        if (detailClientActuelId) {
-            chargerUrlsDetail(detailClientActuelId);
-            chargerGroupesDetail(detailClientActuelId);
-        }
         chargerDashboard();
     } catch (e) {
         console.error('importerSitemapSelection:', e);
@@ -1021,12 +911,6 @@ async function sauvegarderGroupe(e) {
         }
         afficherToast(res.message || t('message.succes'), 'success');
         bootstrap.Modal.getInstance(document.getElementById('modalGroupe'))?.hide();
-
-        // Rafraichir le detail client si ouvert
-        if (detailClientActuelId) {
-            await chargerGroupesDetail(detailClientActuelId);
-            await chargerUrlsDetail(detailClientActuelId);
-        }
         chargerDashboard();
     } catch (e) {
         console.error('sauvegarderGroupe:', e);
@@ -1045,10 +929,6 @@ function supprimerGroupe(id, nom) {
                     return;
                 }
                 afficherToast(res.message || t('message.succes'), 'success');
-                if (detailClientActuelId) {
-                    await chargerGroupesDetail(detailClientActuelId);
-                    await chargerUrlsDetail(detailClientActuelId);
-                }
                 chargerDashboard();
             } catch (e) {
                 console.error('supprimerGroupe:', e);
@@ -1200,7 +1080,6 @@ async function sauvegarderUrl(e) {
             }
             afficherToast(res.message || t('modal.url.urlsAjoutees', 'URLs ajoutees'), 'success');
             bootstrap.Modal.getInstance(document.getElementById('modalUrl'))?.hide();
-            if (detailClientActuelId) await chargerUrlsDetail(detailClientActuelId);
             chargerDashboard();
         } catch (err) {
             console.error('sauvegarderUrl (lot):', err);
@@ -1246,10 +1125,6 @@ async function sauvegarderUrl(e) {
 
         afficherToast(res.message || t('message.succes'), 'success');
         bootstrap.Modal.getInstance(document.getElementById('modalUrl'))?.hide();
-
-        if (detailClientActuelId) {
-            await chargerUrlsDetail(detailClientActuelId);
-        }
         chargerDashboard();
     } catch (e) {
         console.error('sauvegarderUrl:', e);
@@ -1268,9 +1143,6 @@ function supprimerUrl(id) {
                     return;
                 }
                 afficherToast(res.message || t('message.succes'), 'success');
-                if (detailClientActuelId) {
-                    await chargerUrlsDetail(detailClientActuelId);
-                }
                 chargerDashboard();
             } catch (e) {
                 console.error('supprimerUrl:', e);
@@ -2039,49 +1911,6 @@ function arreterPolling(messageFinal) {
 // Filtres detail URLs (recherche et groupe)
 // ---------------------------------------------------------------------------
 
-function filtrerUrlsDetail() {
-    const recherche = (document.getElementById('rechercheUrlsDetail')?.value || '').toLowerCase();
-    const groupeFiltre = document.getElementById('filtreGroupeUrlsDetail')?.value || '';
-    const urls = window._detailUrls || [];
-
-    const filtrees = urls.filter(u => {
-        const matchRecherche = !recherche
-            || (u.url || '').toLowerCase().includes(recherche)
-            || (u.libelle || '').toLowerCase().includes(recherche);
-        const matchGroupe = !groupeFiltre || String(u.groupe_id) === groupeFiltre;
-        return matchRecherche && matchGroupe;
-    });
-
-    const tbody = document.getElementById('bodyUrlsDetail');
-    if (filtrees.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="5" class="text-center text-muted py-3">${t('url.aucune')}</td></tr>`;
-        return;
-    }
-
-    let html = '';
-    filtrees.forEach(u => {
-        const statutBadge = u.dernier_statut
-            ? `<span class="badge ${u.dernier_statut === 'succes' ? 'bg-success' : 'bg-danger'}">${echapper(u.dernier_statut)}</span>`
-            : '<span class="badge bg-secondary">\u2014</span>';
-        const urlAffichee = u.url.length > 60 ? u.url.substring(0, 57) + '...' : u.url;
-        html += `
-            <tr>
-                <td><a href="${echapper(u.url)}" target="_blank" rel="noopener" class="text-decoration-none small">${echapper(urlAffichee)}</a></td>
-                <td class="small">${echapper(u.libelle || '')}</td>
-                <td class="small">${echapper(u.nom_groupe || '')}</td>
-                <td>${statutBadge}</td>
-                <td>
-                    <div class="btn-group btn-group-sm">
-                        <button type="button" class="btn btn-outline-secondary btn-sm" onclick="ouvrirEditionUrl(${u.id})"><i class="bi bi-pencil"></i></button>
-                        <button type="button" class="btn btn-outline-danger btn-sm" onclick="supprimerUrl(${u.id})"><i class="bi bi-trash"></i></button>
-                    </div>
-                </td>
-            </tr>
-        `;
-    });
-    tbody.innerHTML = html;
-}
-
 // ---------------------------------------------------------------------------
 // Utilitaires
 // ---------------------------------------------------------------------------
@@ -2300,44 +2129,24 @@ document.addEventListener('DOMContentLoaded', async () => {
         chargerExecutions();
     });
 
-    // --- Detail client : boutons ---
+    // --- Selecteur client dashboard ---
 
-    document.getElementById('btnAjouterGroupeDetail').addEventListener('click', () => {
-        if (detailClientActuelId) {
-            ouvrirAjoutGroupe(detailClientActuelId);
+    document.getElementById('selecteurClient').addEventListener('change', (e) => {
+        const id = e.target.value;
+        if (id) {
+            selectionnerClient(parseInt(id));
+        } else {
+            selectionnerClient(null);
         }
     });
 
-    document.getElementById('btnAjouterUrlDetail').addEventListener('click', () => {
-        if (detailClientActuelId) {
-            ouvrirAjoutUrlPourClient(detailClientActuelId);
+    // --- Lancer analyse pour le client selectionne ---
+
+    document.getElementById('btnLancerVerifClient').addEventListener('click', () => {
+        if (clientSelectionneId) {
+            ouvrirLancerVerification(clientSelectionneId);
         }
     });
-
-    document.getElementById('btnEditerClientDetail').addEventListener('click', () => {
-        if (detailClientActuelId) {
-            bootstrap.Modal.getInstance(document.getElementById('modalDetailClient'))?.hide();
-            setTimeout(() => ouvrirEditionClient(detailClientActuelId), 300);
-        }
-    });
-
-    document.getElementById('btnLancerVerifDetail').addEventListener('click', () => {
-        if (detailClientActuelId) {
-            bootstrap.Modal.getInstance(document.getElementById('modalDetailClient'))?.hide();
-            setTimeout(() => ouvrirLancerVerification(detailClientActuelId), 300);
-        }
-    });
-
-    // --- Detail client : filtres URLs ---
-
-    const rechercheUrls = document.getElementById('rechercheUrlsDetail');
-    if (rechercheUrls) {
-        rechercheUrls.addEventListener('input', filtrerUrlsDetail);
-    }
-    const filtreGroupeUrls = document.getElementById('filtreGroupeUrlsDetail');
-    if (filtreGroupeUrls) {
-        filtreGroupeUrls.addEventListener('change', filtrerUrlsDetail);
-    }
 
     // --- Verification : user-agent custom ---
 
@@ -2566,98 +2375,6 @@ function remplirFiltreTendancesClient(clients) {
 /**
  * Charge les stats par client et affiche les cartes sante.
  */
-async function chargerSanteParClient() {
-    try {
-        const res = await apiGet({ entite: 'dashboard', action: 'stats_par_client' });
-        if (res.erreur) return;
-
-        const clients = res.donnees || [];
-        const tbody = document.getElementById('bodySanteClients');
-        const vide = document.getElementById('santeClientsVide');
-
-        if (clients.length === 0) {
-            if (vide) vide.querySelector('td').innerHTML = `<i class="bi bi-inbox"></i> ${t('dashboard.aucun_client', 'Aucun client')}`;
-            return;
-        }
-        if (vide) vide.style.display = 'none';
-
-        // Supprimer les lignes existantes sauf la ligne vide
-        tbody.querySelectorAll('tr:not(#santeClientsVide)').forEach(tr => tr.remove());
-
-        clients.forEach(c => {
-            const taux = c.taux_reussite_dernier;
-            const alertes = parseInt(c.alertes_non_lues) || 0;
-            const ttfb = c.ttfb_moyen ? Math.round(c.ttfb_moyen) + 'ms' : '--';
-            const derniere = tempsRelatif(c.derniere_execution);
-            const clientId = c.client_id;
-
-            let tauxHtml = '<span class="text-muted">\u2014</span>';
-            if (taux !== null && taux !== undefined) {
-                const couleur = taux >= 90 ? 'text-success' : (taux >= 50 ? 'text-warning' : 'text-danger');
-                tauxHtml = `<span class="fw-bold ${couleur}">${Math.round(taux)}%</span>`;
-            }
-
-            const alertesBadge = alertes > 0
-                ? `<span class="badge bg-danger">${alertes}</span>`
-                : '<span class="text-muted">0</span>';
-
-            const tr = document.createElement('tr');
-            tr.style.cursor = 'pointer';
-            tr.addEventListener('click', () => ouvrirDetailClient(clientId));
-            tr.innerHTML = `
-                <td class="fw-semibold">${echapper(c.nom)}</td>
-                <td class="text-muted">${echapper(c.domaine || '')}</td>
-                <td>${c.nb_urls ?? 0}</td>
-                <td>${tauxHtml}</td>
-                <td>${ttfb}</td>
-                <td>${alertesBadge}</td>
-                <td class="small">${derniere}</td>
-                <td>
-                    <div class="btn-group btn-group-sm" onclick="event.stopPropagation();">
-                        <button class="btn btn-outline-primary btn-sm" onclick="ouvrirDetailClient(${clientId})" title="${t('client.voir')}">
-                            <i class="bi bi-eye"></i>
-                        </button>
-                        <button class="btn btn-outline-success btn-sm" onclick="ouvrirLancerVerification(${clientId})" title="${t('client.lancer')}">
-                            <i class="bi bi-play-fill"></i>
-                        </button>
-                    </div>
-                </td>
-            `;
-            tbody.appendChild(tr);
-        });
-
-    } catch (e) {
-        console.error('chargerSanteParClient:', e);
-        const vide = document.getElementById('santeClientsVide');
-        if (vide) {
-            vide.style.display = '';
-            vide.querySelector('td').innerHTML = `<i class="bi bi-exclamation-triangle text-warning"></i> ${e.message || t('message.erreur')}`;
-        }
-    }
-}
-
-/**
- * Trier les cartes sante par critere.
- */
-function trierCartesClients(critere) {
-    const grille = document.getElementById('grilleSanteClients');
-    const cartes = [...grille.querySelectorAll('.carte-sante-wrapper')];
-
-    cartes.sort((a, b) => {
-        switch (critere) {
-            case 'score':
-                return (parseFloat(b.dataset.score) || -1) - (parseFloat(a.dataset.score) || -1);
-            case 'alertes':
-                return (parseInt(b.dataset.alertes) || 0) - (parseInt(a.dataset.alertes) || 0);
-            case 'date':
-                return (b.dataset.date || '').localeCompare(a.dataset.date || '');
-            default:
-                return 0;
-        }
-    });
-
-    cartes.forEach(c => grille.appendChild(c));
-}
 
 /**
  * Charge les URLs a risque.
