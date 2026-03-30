@@ -44,6 +44,8 @@ let detailClientActuelId = null;
 let clientSelectionneId = null;
 /** Groupes du client selectionne (cache). */
 let cacheGroupesClient = [];
+/** Cache alertes recentes (pour re-filtrer par client). */
+let cacheAlertesRecentes = [];
 
 // ---------------------------------------------------------------------------
 // Dashboard
@@ -92,8 +94,10 @@ async function chargerDashboard() {
             selectionnerClient(clientSelectionneId);
         }
 
-        // Alertes recentes
-        renderAlertesRecentes(d.alertes_recentes || []);
+        // Alertes recentes (filtrees par client si selectionne)
+        const alertesRecentes = d.alertes_recentes || [];
+        cacheAlertesRecentes = alertesRecentes;
+        renderAlertesRecentes(alertesRecentes);
         mettreAJourBadgeAlertes(d.alertes_non_lues || 0);
 
         // Charger les sections en parallele
@@ -150,9 +154,20 @@ async function selectionnerClient(clientId) {
     btnVoir.style.display = '';
     btnVoir.href = baseUrl + '/client.php?id=' + clientSelectionneId;
 
-    // Synchroniser le filtre tendances
+    // Synchroniser les filtres avec le client selectionne
     const filtreTendances = document.getElementById('filtreTendancesClient');
     if (filtreTendances) filtreTendances.value = clientSelectionneId;
+    const filtreExec = document.getElementById('filtreExecutionClient');
+    if (filtreExec) filtreExec.value = clientSelectionneId;
+
+    // Recharger les sections filtrees par client
+    mettreAJourCompteursChangements();
+    renderChangementsFeed(document.querySelector('#filtreChangementsFeed .btn.active')?.dataset.filtre || 'nouvelles');
+    renderAlertesRecentes(cacheAlertesRecentes);
+    if (document.getElementById('pane-executions').classList.contains('show')) {
+        chargerExecutions();
+    }
+    chargerTendances();
 
     // Charger les groupes
     try {
@@ -2435,17 +2450,27 @@ async function chargerChangementsFeed() {
         }
 
         cacheChangementsFeed = res.donnees;
-        const r = res.donnees.resume || {};
-
-        document.getElementById('countNouvelles').textContent = r.nb_nouvelles || 0;
-        document.getElementById('countRecuperations').textContent = r.nb_recuperations || 0;
-        document.getElementById('countPersistantes').textContent = r.nb_persistantes || 0;
-        document.getElementById('badgeNbChangements').textContent = (r.nb_nouvelles || 0) + (r.nb_recuperations || 0);
-
+        mettreAJourCompteursChangements();
         renderChangementsFeed('nouvelles');
     } catch (e) {
         console.error('chargerChangementsFeed:', e);
     }
+}
+
+function filtrerParClientSelectionne(items) {
+    if (!clientSelectionneId) return items;
+    return items.filter(item => String(item.client_id) === String(clientSelectionneId));
+}
+
+function mettreAJourCompteursChangements() {
+    if (!cacheChangementsFeed) return;
+    const n = filtrerParClientSelectionne(cacheChangementsFeed.nouvelles_defaillances || []).length;
+    const r = filtrerParClientSelectionne(cacheChangementsFeed.recuperations || []).length;
+    const p = filtrerParClientSelectionne(cacheChangementsFeed.defaillances_persistantes || []).length;
+    document.getElementById('countNouvelles').textContent = n;
+    document.getElementById('countRecuperations').textContent = r;
+    document.getElementById('countPersistantes').textContent = p;
+    document.getElementById('badgeNbChangements').textContent = n + r;
 }
 
 function renderChangementsFeed(filtre) {
@@ -2455,7 +2480,7 @@ function renderChangementsFeed(filtre) {
         : filtre === 'recuperations' ? 'recuperations'
         : 'defaillances_persistantes';
 
-    const items = cacheChangementsFeed[cle] || [];
+    const items = filtrerParClientSelectionne(cacheChangementsFeed[cle] || []);
     const corps = document.getElementById('corpsChangementsFeed');
     const feedVide = document.getElementById('feedVide');
 
@@ -2656,13 +2681,17 @@ function renderAlertesRecentes(alertes) {
     const card = document.getElementById('cardAlertesRecentes');
     const conteneur = document.getElementById('listeAlertesRecentes');
 
-    if (!alertes || alertes.length === 0) {
+    const filtrees = clientSelectionneId
+        ? alertes.filter(a => String(a.client_id) === String(clientSelectionneId))
+        : alertes;
+
+    if (!filtrees || filtrees.length === 0) {
         card.style.display = 'none';
         return;
     }
 
     card.style.display = '';
-    conteneur.innerHTML = alertes.map(a => renderAlerteCard(a)).join('');
+    conteneur.innerHTML = filtrees.map(a => renderAlerteCard(a)).join('');
 }
 
 function renderAlerteCard(a) {
@@ -2692,7 +2721,9 @@ function mettreAJourBadgeAlertes(nombre) {
 
 async function chargerAlertes() {
     try {
-        const res = await apiGet({ entite: 'alerte', action: 'lister', limite: 50 });
+        const params = { entite: 'alerte', action: 'lister', limite: 50 };
+        if (clientSelectionneId) params.client_id = clientSelectionneId;
+        const res = await apiGet(params);
         if (res.erreur) return;
 
         const conteneur = document.getElementById('listeAlertes');

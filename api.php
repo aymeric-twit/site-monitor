@@ -1071,9 +1071,9 @@ function genererUrlsParGroupe(\PDO $db): array
             u.actif,
             u.derniere_verification,
             u.dernier_statut,
-            (SELECT COUNT(*) FROM sm_associations_url_modele aum
-             JOIN sm_regles r ON r.modele_id = aum.modele_id AND r.actif = 1
-             WHERE aum.url_id = u.id) AS nb_regles,
+            (SELECT COUNT(*) FROM sm_url_modele um
+             JOIN sm_regles r ON r.modele_id = um.modele_id AND r.actif = 1
+             WHERE um.url_id = u.id) AS nb_regles,
             (SELECT COUNT(*) FROM sm_resultats res
              JOIN sm_executions ex ON ex.id = res.execution_id
              WHERE res.url_id = u.id AND res.succes = 0

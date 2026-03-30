@@ -1063,7 +1063,7 @@
 </template>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-<?php $v = '1.4.0'; ?>
+<?php $v = '1.5.0'; ?>
 <script src="translations.js?v=<?=$v?>"></script>
 <script src="commun.js?v=<?=$v?>"></script>
 <script src="app.js?v=<?=$v?>"></script>

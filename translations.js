@@ -383,7 +383,7 @@ var TRANSLATIONS = {
         'setup.succes': 'groupe(s) et',
         'setup.templateRegles': 'Preset de regles',
         'setup.aucunTemplate': '\u2014 Aucun (ajouter manuellement) \u2014',
-        'setup.templateAide': 'Cree un jeu de regles depuis le preset et l'associe aux URLs' et l\'associe aux URLs',
+        'setup.templateAide': 'Cree un jeu de regles depuis le preset et l\'associe aux URLs',
         'setup.lancerImmediatement': 'Lancer la premiere verification immediatement',
 
         // Planifications
@@ -853,7 +853,7 @@ var TRANSLATIONS = {
         'setup.enregistrerTout': 'Save all',
         'setup.templateRegles': 'Rule preset',
         'setup.aucunTemplate': '\u2014 None (add rules manually) \u2014',
-        'setup.templateAide': 'Creates a rule set from preset and associates it to URLs' and associates it to all URLs',
+        'setup.templateAide': 'Creates a rule set from preset and associates it to all URLs',
         'setup.lancerImmediatement': 'Run the first verification immediately',
 
         // Scheduling
