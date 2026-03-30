@@ -75,11 +75,7 @@ final class ClientHttp
             return $this->recupererViaGoProxy($url);
         }
 
-        // Mode plateforme : utiliser le WebClient centralise
-        if ((defined('PLATFORM_EMBEDDED') || defined('PLATFORM_DOMAIN')) && class_exists(\Platform\Http\WebClient::class)) {
-            return $this->recupererViaPlateforme($url);
-        }
-
+        // Toujours utiliser le scraper cURL natif (standalone)
         return $this->recupererViaStandalone($url);
     }
 
@@ -308,27 +304,6 @@ final class ClientHttp
      */
     public function testerAccessibilite(string $url): array
     {
-        // Mode plateforme : utiliser le WebClient centralise
-        if ((defined('PLATFORM_EMBEDDED') || defined('PLATFORM_DOMAIN')) && class_exists(\Platform\Http\WebClient::class)) {
-            try {
-                $webClient = new \Platform\Http\WebClient('site-monitor');
-                $reponse = $webClient->head($url);
-
-                return [
-                    'accessible' => $reponse->statusCode > 0,
-                    'code_http' => $reponse->statusCode,
-                    'erreur' => null,
-                ];
-            } catch (\Throwable $e) {
-                return [
-                    'accessible' => false,
-                    'code_http' => 0,
-                    'erreur' => $e->getMessage(),
-                ];
-            }
-        }
-
-        // Fallback standalone
         $ch = curl_init();
         curl_setopt_array($ch, [
             CURLOPT_URL => $url,
