@@ -67,8 +67,7 @@
                 <button type="button" class="btn btn-outline-secondary btn-sm" id="btnModifierClient" style="display:none;">
                     <i class="bi bi-pencil me-1"></i><span data-i18n="client.modifier">Modifier</span>
                 </button>
-                <div class="ms-auto d-flex align-items-center gap-2">
-                    <div id="platformCreditsSlot"></div>
+                <div class="ms-auto">
                     <button type="button" class="btn btn-primary btn-sm" id="btnAjouterClient" data-bs-toggle="modal" data-bs-target="#modalClient">
                         <i class="bi bi-plus-lg me-1"></i><span data-i18n="dashboard.ajouterClient">Ajouter un client</span>
                     </button>
@@ -132,23 +131,42 @@
         <!-- ============================================================== -->
         <div class="tab-pane fade show active" id="pane-dashboard" role="tabpanel" aria-labelledby="tab-dashboard">
 
-            <!-- KPIs client (4) -->
-            <div class="kpi-row kpi-row-compact mb-3" id="kpiRow">
-                <div class="kpi-card">
-                    <div class="kpi-value" id="kpiUrlsSurveillees">0</div>
-                    <div class="kpi-label" data-i18n="kpi.urlsSurveillees">URLs surveillees</div>
+            <!-- KPIs client + Help panel -->
+            <div class="row mb-3">
+                <div class="col-lg-8">
+                    <div class="kpi-row kpi-row-compact mb-3" id="kpiRow">
+                        <div class="kpi-card">
+                            <div class="kpi-value" id="kpiUrlsSurveillees">0</div>
+                            <div class="kpi-label" data-i18n="kpi.urlsSurveillees">URLs surveillees</div>
+                        </div>
+                        <div class="kpi-card kpi-green">
+                            <div class="kpi-value" id="kpiTauxReussite">--</div>
+                            <div class="kpi-label" data-i18n="kpi.tauxReussite">Taux de reussite</div>
+                        </div>
+                        <div class="kpi-card">
+                            <div class="kpi-value" id="kpiChangements">0</div>
+                            <div class="kpi-label" data-i18n="kpi.changements">Problemes (7j)</div>
+                        </div>
+                        <div class="kpi-card">
+                            <div class="kpi-value" id="kpiProchaineAnalyse">--</div>
+                            <div class="kpi-label" data-i18n="kpi.prochaineAnalyse">Prochaine analyse</div>
+                        </div>
+                    </div>
                 </div>
-                <div class="kpi-card kpi-green">
-                    <div class="kpi-value" id="kpiTauxReussite">--</div>
-                    <div class="kpi-label" data-i18n="kpi.tauxReussite">Taux de reussite</div>
-                </div>
-                <div class="kpi-card">
-                    <div class="kpi-value" id="kpiChangements">0</div>
-                    <div class="kpi-label" data-i18n="kpi.changements">Problemes (7j)</div>
-                </div>
-                <div class="kpi-card">
-                    <div class="kpi-value" id="kpiProchaineAnalyse">--</div>
-                    <div class="kpi-label" data-i18n="kpi.prochaineAnalyse">Prochaine analyse</div>
+                <div class="col-lg-4" id="helpPanel">
+                    <div id="platformCreditsSlot"></div>
+                    <div class="config-help-panel">
+                        <div class="help-title mb-2">
+                            <i class="bi bi-info-circle me-1"></i> Comment ca marche
+                        </div>
+                        <ul>
+                            <li><strong>Client</strong> : selectionnez un client pour voir toutes ses donnees.</li>
+                            <li><strong>URLs / Groupes</strong> : gerez les pages surveillees et leurs groupes.</li>
+                            <li><strong>Regles</strong> : definissez les verifications a appliquer (HTTP, SEO, contenu...).</li>
+                            <li><strong>Analyse</strong> : lancez une verification pour detecter les regressions.</li>
+                            <li><strong>Feed</strong> : suivez les changements detectes en un coup d'oeil.</li>
+                        </ul>
+                    </div>
                 </div>
             </div>
 
