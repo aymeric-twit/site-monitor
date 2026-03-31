@@ -107,4 +107,26 @@ final class DepotModele
         ';
         return $this->db->query($sql)->fetchAll();
     }
+
+    /**
+     * Retourne les modeles accessibles par un client avec stats (nb regles, nb URLs).
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    public function statistiquesParClient(int $clientId): array
+    {
+        $stmt = $this->db->prepare('
+            SELECT m.*,
+                   COUNT(DISTINCT r.id) AS nb_regles,
+                   COUNT(DISTINCT um.url_id) AS nb_urls
+            FROM sm_modeles m
+            LEFT JOIN sm_regles r ON r.modele_id = m.id
+            LEFT JOIN sm_url_modele um ON um.modele_id = m.id
+            WHERE m.est_global = 1 OR m.client_id = :client_id
+            GROUP BY m.id
+            ORDER BY m.est_global DESC, m.nom ASC
+        ');
+        $stmt->execute(['client_id' => $clientId]);
+        return $stmt->fetchAll();
+    }
 }

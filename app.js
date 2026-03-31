@@ -60,52 +60,37 @@ async function chargerDashboard() {
         }
         const d = res.donnees;
 
-        // KPIs compacts (3 seulement) — avec protection null
-        const kpi = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
-        kpi('kpiClientsActifs', d.stats_clients?.actifs ?? 0);
-        kpi('kpiUrlsSurveillees', d.stats_executions?.urls_surveillees ?? 0);
-        const taux = d.stats_executions?.taux_reussite;
-        kpi('kpiTauxReussite', taux !== null && taux !== undefined ? taux + '%' : '\u2014');
-
         // Cache clients
         cacheClients = (d.clients || []).map(c => ({
             ...c,
             id: c.id ?? c.client_id,
         }));
 
-        // Remplir les selects client (modales + selecteur dashboard)
+        // Remplir les selects client (modales + selecteur principal)
         remplirSelectsClient(cacheClients);
-        remplirFiltreTendancesClient(cacheClients);
         peuplerSelecteurClient(cacheClients);
 
         // Gerer l'etat vide / avec clients
         const aucunClient = !cacheClients || cacheClients.length === 0;
-        document.getElementById('cardAucunClient').style.display = aucunClient ? '' : 'none';
-        document.getElementById('cardTendances').style.display = aucunClient ? 'none' : '';
+        const ecranVide = document.getElementById('ecranAucunClient');
+        const blocScope = document.getElementById('blocClientScope');
 
-        // Auto-selectionner le client (localStorage ou premier)
-        if (!aucunClient && !clientSelectionneId) {
+        if (aucunClient) {
+            ecranVide.style.display = '';
+            blocScope.style.display = 'none';
+            return;
+        }
+
+        // Auto-selectionner le client (URL param > localStorage > premier)
+        if (!clientSelectionneId) {
+            const urlParam = new URLSearchParams(window.location.search).get('client_id');
             const stocke = localStorage.getItem('sm_client_selectionne');
-            const existe = stocke && cacheClients.some(c => String(c.id) === stocke);
-            clientSelectionneId = existe ? parseInt(stocke) : cacheClients[0].id;
+            const idCandidat = urlParam || stocke;
+            const existe = idCandidat && cacheClients.some(c => String(c.id) === String(idCandidat));
+            clientSelectionneId = existe ? parseInt(idCandidat) : cacheClients[0].id;
             document.getElementById('selecteurClient').value = clientSelectionneId;
-            selectionnerClient(clientSelectionneId);
-        } else if (!aucunClient && clientSelectionneId) {
-            selectionnerClient(clientSelectionneId);
         }
-
-        // Alertes recentes (filtrees par client si selectionne)
-        const alertesRecentes = d.alertes_recentes || [];
-        cacheAlertesRecentes = alertesRecentes;
-        renderAlertesRecentes(alertesRecentes);
-        mettreAJourBadgeAlertes(d.alertes_non_lues || 0);
-
-        // Charger les sections en parallele
-        const promesses = [chargerChangementsFeed()];
-        if (!aucunClient) {
-            promesses.push(chargerTendances());
-        }
-        Promise.all(promesses);
+        selectionnerClient(clientSelectionneId);
 
     } catch (e) {
         console.error('chargerDashboard:', e);
@@ -136,52 +121,264 @@ async function selectionnerClient(clientId) {
         localStorage.setItem('sm_client_selectionne', String(clientSelectionneId));
     }
 
-    const cardUrls = document.getElementById('cardUrlsDashboard');
-    const tabsGroupes = document.getElementById('tabsGroupes');
+    const ecranVide = document.getElementById('ecranAucunClient');
+    const blocScope = document.getElementById('blocClientScope');
     const btnLancer = document.getElementById('btnLancerVerifClient');
-    const btnVoir = document.getElementById('btnVoirClient');
+    const btnSetup = document.getElementById('btnSetupRapide');
+    const btnModifier = document.getElementById('btnModifierClient');
 
     if (!clientSelectionneId) {
-        cardUrls.style.display = 'none';
-        tabsGroupes.style.display = 'none';
+        ecranVide.style.display = '';
+        blocScope.style.display = 'none';
         btnLancer.style.display = 'none';
-        btnVoir.style.display = 'none';
+        btnSetup.style.display = 'none';
+        btnModifier.style.display = 'none';
         return;
     }
 
-    // Afficher les boutons contextuels
+    // Afficher tout le bloc scope client
+    ecranVide.style.display = 'none';
+    blocScope.style.display = '';
     btnLancer.style.display = '';
-    btnVoir.style.display = '';
-    btnVoir.href = baseUrl + '/client.php?id=' + clientSelectionneId;
+    btnSetup.style.display = '';
+    btnModifier.style.display = '';
 
-    // Synchroniser les filtres avec le client selectionne
-    const filtreTendances = document.getElementById('filtreTendancesClient');
-    if (filtreTendances) filtreTendances.value = clientSelectionneId;
-    const filtreExec = document.getElementById('filtreExecutionClient');
-    if (filtreExec) filtreExec.value = clientSelectionneId;
-
-    // Recharger les sections filtrees par client
-    mettreAJourCompteursChangements();
-    renderChangementsFeed(document.querySelector('#filtreChangementsFeed .btn.active')?.dataset.filtre || 'nouvelles');
-    renderAlertesRecentes(cacheAlertesRecentes);
-    if (document.getElementById('pane-executions').classList.contains('show')) {
-        chargerExecutions();
-    }
-    chargerTendances();
-
-    // Charger les groupes
+    // Charger tout en parallele
     try {
-        const res = await apiGet({ entite: 'groupe', action: 'lister', client_id: clientSelectionneId });
-        cacheGroupesClient = res.donnees || [];
+        await Promise.all([
+            chargerKPIsClient(clientSelectionneId),
+            chargerUrlsGroupe(clientSelectionneId, 0),
+            chargerGroupesAccordion(clientSelectionneId),
+            chargerPlanification(clientSelectionneId),
+            chargerChangementsFeed(),
+            chargerTendances(),
+        ]);
+        // Alertes et feed (apres le cache)
+        renderAlertesRecentes(cacheAlertesRecentes);
+        // Groupes tabs
+        const resG = await apiGet({ entite: 'groupe', action: 'lister', client_id: clientSelectionneId });
+        cacheGroupesClient = resG.donnees || [];
         construireTabsGroupes(cacheGroupesClient);
-        tabsGroupes.style.display = '';
-        cardUrls.style.display = '';
-
-        // Charger toutes les URLs (tab "Toutes")
-        await chargerUrlsGroupe(clientSelectionneId, 0);
     } catch (e) {
         console.error('selectionnerClient:', e);
-        afficherToast(t('message.erreur_reseau'), 'danger');
+    }
+
+    // Recharger les onglets visibles
+    if (document.getElementById('pane-modeles')?.classList.contains('show')) chargerModeles();
+    if (document.getElementById('pane-executions')?.classList.contains('show')) chargerExecutions();
+    if (document.getElementById('pane-alertes')?.classList.contains('show')) chargerAlertes();
+}
+
+// ---------------------------------------------------------------------------
+// KPIs client
+// ---------------------------------------------------------------------------
+
+async function chargerKPIsClient(clientId) {
+    try {
+        const res = await apiGet({ entite: 'dashboard', action: 'stats_client', client_id: clientId });
+        if (res.erreur) return;
+        const d = res.donnees;
+
+        const kpi = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
+        kpi('kpiUrlsSurveillees', d.nb_urls ?? 0);
+        const taux = d.taux_reussite;
+        kpi('kpiTauxReussite', taux !== null && taux !== undefined ? taux + '%' : '\u2014');
+        kpi('kpiChangements', d.nb_changements ?? 0);
+
+        // Prochaine analyse
+        if (d.prochaine_analyse) {
+            const date = new Date(d.prochaine_analyse);
+            kpi('kpiProchaineAnalyse', date.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' }) + ' ' + date.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }));
+        } else {
+            kpi('kpiProchaineAnalyse', '\u2014');
+        }
+
+        // Badge alertes
+        mettreAJourBadgeAlertes(d.nb_alertes_non_lues ?? 0);
+    } catch (e) {
+        console.error('chargerKPIsClient:', e);
+    }
+}
+
+// ---------------------------------------------------------------------------
+// Groupes accordion (porte de client-page.js)
+// ---------------------------------------------------------------------------
+
+async function chargerGroupesAccordion(clientId) {
+    const conteneur = document.getElementById('accordionGroupes');
+    const vide = document.getElementById('groupesVide');
+    if (!conteneur) return;
+
+    try {
+        const res = await apiGet({ entite: 'groupe', action: 'lister', client_id: clientId });
+        const groupes = res.donnees || [];
+
+        if (groupes.length === 0) {
+            conteneur.innerHTML = '';
+            conteneur.appendChild(vide);
+            vide.style.display = '';
+            return;
+        }
+        if (vide) vide.style.display = 'none';
+
+        let html = '';
+        for (const g of groupes) {
+            const resUrls = await apiGet({ entite: 'url', action: 'lister', groupe_id: g.id });
+            const urls = resUrls.donnees || [];
+
+            let urlsHtml = urls.map(u => `
+                <div class="d-flex justify-content-between align-items-center py-1 px-2 border-bottom">
+                    <span class="font-monospace small text-truncate" style="max-width:400px;" title="${echapper(u.url)}">${echapper(u.url)}</span>
+                    <button class="btn btn-outline-danger btn-xs" onclick="supprimerUrlDashboard(${u.id}, '${echapper(u.url)}')" title="Supprimer">
+                        <i class="bi bi-x-lg"></i>
+                    </button>
+                </div>
+            `).join('');
+
+            html += `
+                <div class="accordion-item">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button collapsed py-2 px-3" type="button" data-bs-toggle="collapse" data-bs-target="#grp-${g.id}">
+                            <strong>${echapper(g.nom)}</strong>
+                            <span class="badge bg-secondary ms-2">${urls.length} URLs</span>
+                        </button>
+                    </h2>
+                    <div id="grp-${g.id}" class="accordion-collapse collapse">
+                        <div class="accordion-body p-0">
+                            ${urlsHtml || '<p class="text-muted text-center py-2 small">Aucune URL</p>'}
+                            <div class="p-2 bg-light">
+                                <div class="input-group input-group-sm">
+                                    <input type="url" class="form-control" placeholder="https://..." id="urlRapide-${g.id}">
+                                    <button class="btn btn-outline-primary" onclick="ajouterUrlRapideDashboard(${g.id})">
+                                        <i class="bi bi-plus-lg"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+        conteneur.innerHTML = html;
+    } catch (e) {
+        console.error('chargerGroupesAccordion:', e);
+    }
+}
+
+async function ajouterUrlRapideDashboard(groupeId) {
+    const input = document.getElementById('urlRapide-' + groupeId);
+    if (!input) return;
+    const url = input.value.trim();
+    if (!url) return;
+
+    try {
+        const res = await apiPost({ entite: 'url', action: 'creer', groupe_id: groupeId, url: url, actif: '1' });
+        if (res.erreur) {
+            afficherToast(res.erreur, 'danger');
+            return;
+        }
+        input.value = '';
+        afficherToast('URL ajoutee', 'success');
+        chargerGroupesAccordion(clientSelectionneId);
+        chargerUrlsGroupe(clientSelectionneId, 0);
+    } catch (e) {
+        afficherToast(t('message.erreur'), 'danger');
+    }
+}
+
+function supprimerUrlDashboard(urlId, urlTexte) {
+    ouvrirConfirmation(
+        'Supprimer ' + urlTexte + ' ?',
+        async () => {
+            try {
+                await apiPost({ entite: 'url', action: 'supprimer', id: urlId });
+                afficherToast('URL supprimee', 'success');
+                chargerGroupesAccordion(clientSelectionneId);
+                chargerUrlsGroupe(clientSelectionneId, 0);
+            } catch (e) {
+                afficherToast(t('message.erreur'), 'danger');
+            }
+        }
+    );
+}
+
+// ---------------------------------------------------------------------------
+// Planification (porte de client-page.js)
+// ---------------------------------------------------------------------------
+
+let _planifActuelleId = null;
+
+async function chargerPlanification(clientId) {
+    try {
+        const res = await apiGet({ entite: 'planification', action: 'lister', client_id: clientId });
+        if (res.erreur) return;
+
+        const planifs = res.donnees || [];
+        const blocExistante = document.getElementById('blocPlanifExistante');
+        const blocCreer = document.getElementById('blocPlanifCreer');
+
+        if (planifs.length > 0) {
+            const p = planifs[0];
+            _planifActuelleId = p.id;
+            blocExistante.style.display = '';
+            blocCreer.style.display = 'none';
+
+            const freqLabels = { 360: 'Toutes les 6h', 720: 'Toutes les 12h', 1440: 'Quotidien', 10080: 'Hebdomadaire' };
+            document.getElementById('planifFrequenceLabel').textContent = freqLabels[p.frequence_minutes] || (p.frequence_minutes + ' min');
+            document.getElementById('planifProchaineLabel').textContent = p.prochaine_execution
+                ? 'Prochaine : ' + new Date(p.prochaine_execution).toLocaleString('fr-FR')
+                : '';
+            document.getElementById('planifActifToggle').checked = !!p.actif;
+        } else {
+            _planifActuelleId = null;
+            blocExistante.style.display = 'none';
+            blocCreer.style.display = '';
+        }
+    } catch (e) {
+        console.error('chargerPlanification:', e);
+    }
+}
+
+async function creerPlanification() {
+    if (!clientSelectionneId) return;
+    const frequence = document.getElementById('planifFrequence').value;
+    try {
+        const res = await apiPost({
+            entite: 'planification',
+            action: 'creer',
+            client_id: clientSelectionneId,
+            frequence_minutes: frequence,
+        });
+        if (res.erreur) {
+            afficherToast(res.erreur, 'danger');
+            return;
+        }
+        afficherToast('Planification activee', 'success');
+        chargerPlanification(clientSelectionneId);
+        chargerKPIsClient(clientSelectionneId);
+    } catch (e) {
+        afficherToast(t('message.erreur'), 'danger');
+    }
+}
+
+async function togglePlanification(actif) {
+    if (!_planifActuelleId) return;
+    try {
+        await apiPost({ entite: 'planification', action: 'modifier', id: _planifActuelleId, actif: actif ? '1' : '0' });
+    } catch (e) {
+        console.error('togglePlanification:', e);
+    }
+}
+
+async function supprimerPlanification() {
+    if (!_planifActuelleId) return;
+    try {
+        await apiPost({ entite: 'planification', action: 'supprimer', id: _planifActuelleId });
+        afficherToast('Planification supprimee', 'success');
+        chargerPlanification(clientSelectionneId);
+        chargerKPIsClient(clientSelectionneId);
+    } catch (e) {
+        console.error('supprimerPlanification:', e);
     }
 }
 
@@ -262,8 +459,6 @@ async function chargerUrlsGroupe(clientId, groupeId) {
 function renderTableUrls(urls, tbody) {
     urls.forEach(u => {
         const tr = document.createElement('tr');
-        tr.style.cursor = 'pointer';
-        tr.addEventListener('click', () => ouvrirDetailClient(clientSelectionneId));
 
         // Statut
         let statutHtml;
@@ -321,11 +516,6 @@ function renderTableUrls(urls, tbody) {
             <td>${reglesHtml}</td>
             <td class="small text-muted">${derniere}</td>
             <td>${problemesHtml}</td>
-            <td>
-                <button class="btn btn-outline-primary btn-xs" onclick="event.stopPropagation(); ouvrirDetailClient(${clientSelectionneId})" title="${t('client.voir_detail', 'Voir le detail')}">
-                    <i class="bi bi-eye"></i>
-                </button>
-            </td>
         `;
         tbody.appendChild(tr);
     });
@@ -361,19 +551,6 @@ function remplirSelectsClient(clients) {
         selVerif.value = valeur;
     }
 
-    // Select filtre executions
-    const selFiltreExec = document.getElementById('filtreExecutionClient');
-    if (selFiltreExec) {
-        const valeur = selFiltreExec.value;
-        selFiltreExec.querySelectorAll('option:not(:first-child)').forEach(o => o.remove());
-        clients.forEach(c => {
-            const opt = document.createElement('option');
-            opt.value = c.id;
-            opt.textContent = c.nom;
-            selFiltreExec.appendChild(opt);
-        });
-        selFiltreExec.value = valeur;
-    }
 }
 
 // ---------------------------------------------------------------------------
@@ -613,9 +790,6 @@ async function sauvegarderSetupRapide() {
 // Detail Client (modale drilldown)
 // ---------------------------------------------------------------------------
 
-function ouvrirDetailClient(id) {
-    window.location.href = baseUrl + '/client.php?id=' + id;
-}
 
 
 // ---------------------------------------------------------------------------
@@ -1195,7 +1369,9 @@ async function peuplerSelectTemplates() {
 
 async function chargerModeles() {
     try {
-        const res = await apiGet({ entite: 'modele', action: 'lister' });
+        const params = { entite: 'modele', action: 'lister' };
+        if (clientSelectionneId) params.client_id = clientSelectionneId;
+        const res = await apiGet(params);
         if (res.erreur) {
             afficherToast(res.erreur, 'danger');
             return;
@@ -1528,11 +1704,10 @@ function supprimerRegle(id) {
 
 async function chargerExecutions() {
     try {
-        const filtreStatut = document.getElementById('filtreExecutionStatut').value;
-        const filtreClient = document.getElementById('filtreExecutionClient').value;
+        const filtreStatut = document.getElementById('filtreExecutionStatut')?.value;
 
         const params = { entite: 'execution', action: 'lister' };
-        if (filtreClient) params.client_id = filtreClient;
+        if (clientSelectionneId) params.client_id = clientSelectionneId;
 
         const res = await apiGet(params);
         if (res.erreur) {
@@ -1583,7 +1758,6 @@ async function chargerExecutions() {
 
             tr.innerHTML = `
                 <td class="small">${dateStr}</td>
-                <td>${echapper(ex.client_nom || '\u2014')}</td>
                 <td><span class="badge ${badgeClass}">${echapper(statutLabel)}</span></td>
                 <td>${ex.urls_total ?? 0}</td>
                 <td>
@@ -2135,12 +2309,19 @@ document.addEventListener('DOMContentLoaded', async () => {
         chargerExecutions();
     });
 
+    // --- Onglet URLs/Groupes ---
+
+    document.getElementById('tab-urls')?.addEventListener('shown.bs.tab', () => {
+        if (clientSelectionneId) {
+            chargerUrlsGroupe(clientSelectionneId, 0);
+            chargerGroupesAccordion(clientSelectionneId);
+            chargerPlanification(clientSelectionneId);
+        }
+    });
+
     // --- Filtres executions ---
 
-    document.getElementById('filtreExecutionStatut').addEventListener('change', () => {
-        chargerExecutions();
-    });
-    document.getElementById('filtreExecutionClient').addEventListener('change', () => {
+    document.getElementById('filtreExecutionStatut')?.addEventListener('change', () => {
         chargerExecutions();
     });
 
@@ -2161,6 +2342,34 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (clientSelectionneId) {
             ouvrirLancerVerification(clientSelectionneId);
         }
+    });
+
+    // --- Modifier client ---
+
+    document.getElementById('btnModifierClient')?.addEventListener('click', () => {
+        if (clientSelectionneId) ouvrirEditionClient(clientSelectionneId);
+    });
+
+    // --- Groupes dashboard ---
+
+    document.getElementById('btnAjouterGroupeDashboard')?.addEventListener('click', () => {
+        if (clientSelectionneId) ouvrirAjoutGroupe(clientSelectionneId);
+    });
+
+    document.getElementById('btnImportSitemapDashboard')?.addEventListener('click', () => {
+        if (clientSelectionneId) ouvrirImportSitemap(clientSelectionneId);
+    });
+
+    // --- Planification ---
+
+    document.getElementById('btnCreerPlanif')?.addEventListener('click', creerPlanification);
+    document.getElementById('planifActifToggle')?.addEventListener('change', (e) => togglePlanification(e.target.checked));
+    document.getElementById('btnSupprimerPlanif')?.addEventListener('click', supprimerPlanification);
+
+    // --- Onglet Alertes ---
+
+    document.getElementById('tab-alertes')?.addEventListener('shown.bs.tab', () => {
+        chargerAlertes();
     });
 
     // --- Verification : user-agent custom ---
@@ -2186,12 +2395,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     // --- Tri des colonnes ---
 
     configurerTri();
-
-    // --- Onglet Alertes ---
-
-    document.getElementById('tab-alertes')?.addEventListener('shown.bs.tab', () => {
-        chargerAlertes();
-    });
 
     // --- Bouton voir toutes les alertes ---
 
@@ -2271,12 +2474,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (!document.getElementById('setupClientId').value) {
             ouvrirSetupRapide(null, null);
         }
-    });
-
-    // --- Dashboard avance : filtre tendances par client ---
-
-    document.getElementById('filtreTendancesClient')?.addEventListener('change', (e) => {
-        chargerTendances(e.target.value || null);
     });
 
     // --- Dashboard avance : onglets tendances ---
@@ -2372,20 +2569,6 @@ function classeScore(taux) {
 /**
  * Remplir le select de filtre tendances.
  */
-function remplirFiltreTendancesClient(clients) {
-    const select = document.getElementById('filtreTendancesClient');
-    if (!select) return;
-    // Garder l'option "Tous les clients"
-    const premierOption = select.options[0];
-    select.innerHTML = '';
-    select.appendChild(premierOption);
-    clients.forEach(c => {
-        const opt = document.createElement('option');
-        opt.value = c.id ?? c.client_id;
-        opt.textContent = c.nom;
-        select.appendChild(opt);
-    });
-}
 
 /**
  * Charge les stats par client et affiche les cartes sante.
@@ -2541,10 +2724,10 @@ let chartTendancesInstance = null;
 let donneesTendancesCache = null;
 let graphiqueActuel = 'taux';
 
-async function chargerTendances(clientId = null) {
+async function chargerTendances() {
     try {
         const params = { entite: 'dashboard', action: 'tendances' };
-        if (clientId) params.client_id = clientId;
+        if (clientSelectionneId) params.client_id = clientSelectionneId;
 
         const res = await apiGet(params);
         if (res.erreur) return;

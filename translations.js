@@ -4,7 +4,8 @@
 var TRANSLATIONS = {
     fr: {
         // Navigation
-        'onglet.dashboard': 'Dashboard',
+        'onglet.dashboard': 'Vue d\'ensemble',
+        'onglet.urls': 'URLs / Groupes',
         'onglet.modeles': 'Regles',
         'onglet.executions': 'Executions',
 
@@ -211,6 +212,8 @@ var TRANSLATIONS = {
         'kpi.executions24hSub': 'dernieres 24 heures',
         'kpi.tauxReussite': 'Taux de reussite',
         'kpi.tauxReussiteSub': 'sur les dernieres executions',
+        'kpi.changements': 'Problemes (7j)',
+        'kpi.prochaineAnalyse': 'Prochaine analyse',
 
         // Navigation / Sous-titre
         'nav.sousTitre': 'Monitoring SEO',
@@ -475,12 +478,13 @@ var TRANSLATIONS = {
 
     en: {
         // Navigation
-        'onglet.dashboard': 'Dashboard',
+        'onglet.dashboard': 'Overview',
+        'onglet.urls': 'URLs / Groups',
         'onglet.modeles': 'Rules',
         'onglet.executions': 'Executions',
 
         // Dashboard
-        'dashboard.titre': 'Dashboard',
+        'dashboard.titre': 'Overview',
         'dashboard.clients_actifs': 'Active clients',
         'dashboard.urls_surveillees': 'Monitored URLs',
         'dashboard.executions_24h': 'Executions (24h)',
@@ -682,6 +686,8 @@ var TRANSLATIONS = {
         'kpi.executions24hSub': 'last 24 hours',
         'kpi.tauxReussite': 'Success rate',
         'kpi.tauxReussiteSub': 'on recent executions',
+        'kpi.changements': 'Issues (7d)',
+        'kpi.prochaineAnalyse': 'Next analysis',
 
         // Navigation
         'nav.sousTitre': 'SEO Monitoring',

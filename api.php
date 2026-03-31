@@ -635,7 +635,7 @@ function gererModeles(\PDO $db, string $action): array
     $depot = new DepotModele($db);
 
     return match ($action) {
-        'lister' => ['donnees' => $depot->statistiques()],
+        'lister' => listerModeles($depot),
         'obtenir' => obtenirModele($depot),
         'creer' => creerModele($db, $depot),
         'modifier' => modifierModele($depot),
@@ -643,6 +643,15 @@ function gererModeles(\PDO $db, string $action): array
         'templates' => ['donnees' => RegistreTemplates::lister()],
         default => ['erreur' => "Action inconnue : {$action}"],
     };
+}
+
+function listerModeles(DepotModele $depot): array
+{
+    $clientId = isset($_POST['client_id']) || isset($_GET['client_id'])
+        ? (int) ($_POST['client_id'] ?? $_GET['client_id'])
+        : null;
+    $donnees = $clientId ? $depot->statistiquesParClient($clientId) : $depot->statistiques();
+    return ['donnees' => $donnees];
 }
 
 function obtenirModele(DepotModele $depot): array
@@ -850,7 +859,9 @@ function gererExecutions(\PDO $db, string $action): array
 
 function listerExecutions(\PDO $db, DepotExecution $depot): array
 {
-    $clientId = isset($_POST['client_id']) ? (int) $_POST['client_id'] : null;
+    $clientId = isset($_POST['client_id']) || isset($_GET['client_id'])
+        ? (int) ($_POST['client_id'] ?? $_GET['client_id'])
+        : null;
     $statut = trim($_POST['statut'] ?? $_GET['statut'] ?? '');
     $limite = (int) ($_POST['limite'] ?? $_GET['limite'] ?? 50);
 
@@ -965,6 +976,7 @@ function genererDashboard(\PDO $db, string $action, ?int $utilisateurId): array
         'changements_feed' => genererChangementsFeed($db, $utilisateurId),
         'tendances' => genererTendances($db),
         'urls_par_groupe' => genererUrlsParGroupe($db),
+        'stats_client' => genererStatsClient($db),
         default => ['erreur' => "Action dashboard inconnue : {$action}"],
     };
 }
@@ -1098,6 +1110,69 @@ function genererUrlsParGroupe(\PDO $db): array
     $stmt->execute();
 
     return ['donnees' => $stmt->fetchAll(\PDO::FETCH_ASSOC)];
+}
+
+function genererStatsClient(\PDO $db): array
+{
+    $clientId = (int) ($_POST['client_id'] ?? $_GET['client_id'] ?? 0);
+    if ($clientId <= 0) {
+        return ['erreur' => 'client_id requis'];
+    }
+
+    // URLs actives
+    $stmtUrls = $db->prepare('
+        SELECT COUNT(*) FROM sm_urls u
+        JOIN sm_groupes_urls g ON g.id = u.groupe_id
+        WHERE g.client_id = :cid AND u.actif = 1
+    ');
+    $stmtUrls->execute(['cid' => $clientId]);
+    $nbUrls = (int) $stmtUrls->fetchColumn();
+
+    // Taux reussite derniere execution
+    $stmtTaux = $db->prepare("
+        SELECT
+            CASE WHEN regles_total > 0 THEN ROUND(succes * 100.0 / regles_total, 1) ELSE NULL END AS taux
+        FROM sm_executions
+        WHERE client_id = :cid AND statut = 'termine'
+        ORDER BY id DESC LIMIT 1
+    ");
+    $stmtTaux->execute(['cid' => $clientId]);
+    $taux = $stmtTaux->fetchColumn();
+
+    // Changements detectes (7 jours)
+    $stmtChg = $db->prepare("
+        SELECT COUNT(*) FROM sm_resultats r
+        JOIN sm_executions e ON e.id = r.execution_id
+        WHERE e.client_id = :cid AND r.succes = 0
+          AND e.cree_le >= " . \SiteMonitor\Core\Connexion::ilYA('-7 days') . "
+    ");
+    $stmtChg->execute(['cid' => $clientId]);
+    $nbChangements = (int) $stmtChg->fetchColumn();
+
+    // Prochaine analyse
+    $stmtPlanif = $db->prepare('
+        SELECT prochaine_execution FROM sm_planifications
+        WHERE client_id = :cid AND actif = 1
+        ORDER BY id DESC LIMIT 1
+    ');
+    $stmtPlanif->execute(['cid' => $clientId]);
+    $prochaineAnalyse = $stmtPlanif->fetchColumn() ?: null;
+
+    // Alertes non lues
+    $stmtAlertes = $db->prepare('
+        SELECT COUNT(*) FROM sm_alertes
+        WHERE client_id = :cid AND envoyee = 0
+    ');
+    $stmtAlertes->execute(['cid' => $clientId]);
+    $nbAlertes = (int) $stmtAlertes->fetchColumn();
+
+    return ['donnees' => [
+        'nb_urls' => $nbUrls,
+        'taux_reussite' => $taux !== false ? (float) $taux : null,
+        'nb_changements' => $nbChangements,
+        'prochaine_analyse' => $prochaineAnalyse,
+        'nb_alertes_non_lues' => $nbAlertes,
+    ]];
 }
 
 function genererUrlsARisque(\PDO $db): array

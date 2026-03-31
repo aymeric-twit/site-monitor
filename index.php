@@ -50,32 +50,76 @@
     </div>
 
     <!-- ================================================================== -->
-    <!-- Onglets principaux                                                 -->
+    <!-- Barre client (toujours visible, au-dessus des tabs)               -->
     <!-- ================================================================== -->
+    <div class="card mb-3 barre-client" id="barreClient">
+        <div class="card-body py-2 px-3">
+            <div class="d-flex align-items-center gap-2 flex-wrap">
+                <select class="form-select form-select-sm selecteur-client" id="selecteurClient" style="width:auto; min-width:220px;">
+                    <option value="" data-i18n="dashboard.choisir_client">Choisir un client...</option>
+                </select>
+                <button type="button" class="btn btn-outline-success btn-sm" id="btnLancerVerifClient" style="display:none;">
+                    <i class="bi bi-play-fill me-1"></i><span data-i18n="dashboard.lancerVerification">Lancer une analyse</span>
+                </button>
+                <button type="button" class="btn btn-outline-primary btn-sm" id="btnSetupRapide" data-bs-toggle="modal" data-bs-target="#modalSetupRapide" style="display:none;">
+                    <i class="bi bi-lightning me-1"></i><span data-i18n="setup.titre">Setup rapide</span>
+                </button>
+                <button type="button" class="btn btn-outline-secondary btn-sm" id="btnModifierClient" style="display:none;">
+                    <i class="bi bi-pencil me-1"></i><span data-i18n="client.modifier">Modifier</span>
+                </button>
+                <div class="ms-auto d-flex align-items-center gap-2">
+                    <div id="platformCreditsSlot"></div>
+                    <button type="button" class="btn btn-primary btn-sm" id="btnAjouterClient" data-bs-toggle="modal" data-bs-target="#modalClient">
+                        <i class="bi bi-plus-lg me-1"></i><span data-i18n="dashboard.ajouterClient">Ajouter un client</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Ecran aucun client selectionne -->
+    <div id="ecranAucunClient" class="text-center py-5" style="display:none;">
+        <i class="bi bi-building fs-1 text-muted d-block mb-3"></i>
+        <h5 class="text-muted" data-i18n="dashboard.choisir_client_invite">Selectionnez un client ci-dessus pour voir ses donnees.</h5>
+        <button type="button" class="btn btn-primary mt-3" data-bs-toggle="modal" data-bs-target="#modalClient">
+            <i class="bi bi-plus-lg me-1"></i><span data-i18n="dashboard.ajouterClient">Ajouter un client</span>
+        </button>
+    </div>
+
+    <!-- ================================================================== -->
+    <!-- Onglets principaux (scopes au client selectionne)                  -->
+    <!-- ================================================================== -->
+    <div id="blocClientScope" style="display:none;">
+
     <ul class="nav nav-tabs mb-4" id="tabsPrincipaux" role="tablist">
         <li class="nav-item" role="presentation">
-            <button class="nav-link active" id="tab-dashboard" data-bs-toggle="tab" data-bs-target="#pane-dashboard" type="button" role="tab" aria-controls="pane-dashboard" aria-selected="true">
-                <i class="bi bi-speedometer2 me-1"></i><span data-i18n="onglet.dashboard">Tableau de bord</span>
+            <button class="nav-link active" id="tab-dashboard" data-bs-toggle="tab" data-bs-target="#pane-dashboard" type="button" role="tab">
+                <i class="bi bi-speedometer2 me-1"></i><span data-i18n="onglet.dashboard">Vue d'ensemble</span>
             </button>
         </li>
         <li class="nav-item" role="presentation">
-            <button class="nav-link" id="tab-modeles" data-bs-toggle="tab" data-bs-target="#pane-modeles" type="button" role="tab" aria-controls="pane-modeles" aria-selected="false">
+            <button class="nav-link" id="tab-urls" data-bs-toggle="tab" data-bs-target="#pane-urls" type="button" role="tab">
+                <i class="bi bi-link-45deg me-1"></i><span data-i18n="onglet.urls">URLs / Groupes</span>
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="tab-modeles" data-bs-toggle="tab" data-bs-target="#pane-modeles" type="button" role="tab">
                 <i class="bi bi-file-earmark-ruled me-1"></i><span data-i18n="onglet.modeles">Regles</span>
             </button>
         </li>
         <li class="nav-item" role="presentation">
-            <button class="nav-link" id="tab-executions" data-bs-toggle="tab" data-bs-target="#pane-executions" type="button" role="tab" aria-controls="pane-executions" aria-selected="false">
+            <button class="nav-link" id="tab-executions" data-bs-toggle="tab" data-bs-target="#pane-executions" type="button" role="tab">
                 <i class="bi bi-clock-history me-1"></i><span data-i18n="onglet.executions">Executions</span>
             </button>
         </li>
         <li class="nav-item" role="presentation">
-            <button class="nav-link" id="tab-alertes" data-bs-toggle="tab" data-bs-target="#pane-alertes" type="button" role="tab" aria-controls="pane-alertes" aria-selected="false">
+            <button class="nav-link" id="tab-alertes" data-bs-toggle="tab" data-bs-target="#pane-alertes" type="button" role="tab">
                 <i class="bi bi-bell me-1"></i><span data-i18n="alerte.titre">Alertes</span>
                 <span class="badge bg-danger badge-alertes" id="badgeAlertes" style="display:none;">0</span>
             </button>
         </li>
         <li class="nav-item" role="presentation">
-            <button class="nav-link" id="tab-indexation" data-bs-toggle="tab" data-bs-target="#pane-indexation" type="button" role="tab" aria-controls="pane-indexation" aria-selected="false">
+            <button class="nav-link" id="tab-indexation" data-bs-toggle="tab" data-bs-target="#pane-indexation" type="button" role="tab">
                 <i class="bi bi-search me-1"></i><span data-i18n="onglet.indexation">Audit d'indexation</span>
             </button>
         </li>
@@ -88,12 +132,8 @@
         <!-- ============================================================== -->
         <div class="tab-pane fade show active" id="pane-dashboard" role="tabpanel" aria-labelledby="tab-dashboard">
 
-            <!-- 1a. KPIs compacts (3) -->
+            <!-- KPIs client (4) -->
             <div class="kpi-row kpi-row-compact mb-3" id="kpiRow">
-                <div class="kpi-card kpi-dark">
-                    <div class="kpi-value" id="kpiClientsActifs">0</div>
-                    <div class="kpi-label" data-i18n="kpi.clientsActifs">Clients actifs</div>
-                </div>
                 <div class="kpi-card">
                     <div class="kpi-value" id="kpiUrlsSurveillees">0</div>
                     <div class="kpi-label" data-i18n="kpi.urlsSurveillees">URLs surveillees</div>
@@ -102,77 +142,13 @@
                     <div class="kpi-value" id="kpiTauxReussite">--</div>
                     <div class="kpi-label" data-i18n="kpi.tauxReussite">Taux de reussite</div>
                 </div>
-            </div>
-
-            <!-- 1b. Barre de controle : selecteur client + actions -->
-            <div class="card mb-3" id="barreControle">
-                <div class="card-body py-2 px-3">
-                    <div class="d-flex align-items-center gap-2 flex-wrap">
-                        <select class="form-select form-select-sm selecteur-client" id="selecteurClient" style="width:auto; min-width:200px;">
-                            <option value="" data-i18n="dashboard.choisir_client">Choisir un client...</option>
-                        </select>
-                        <button type="button" class="btn btn-primary btn-sm" id="btnAjouterClient" data-bs-toggle="modal" data-bs-target="#modalClient">
-                            <i class="bi bi-plus-lg me-1"></i><span data-i18n="dashboard.ajouterClient">Ajouter un client</span>
-                        </button>
-                        <button type="button" class="btn btn-outline-success btn-sm" id="btnLancerVerifClient" style="display:none;">
-                            <i class="bi bi-play-fill me-1"></i><span data-i18n="dashboard.lancerVerification">Lancer une analyse</span>
-                        </button>
-                        <button type="button" class="btn btn-outline-primary btn-sm" id="btnSetupRapide" data-bs-toggle="modal" data-bs-target="#modalSetupRapide">
-                            <i class="bi bi-lightning me-1"></i><span data-i18n="setup.titre">Setup rapide</span>
-                        </button>
-                        <a href="#" class="btn btn-outline-secondary btn-sm" id="btnVoirClient" style="display:none;">
-                            <i class="bi bi-box-arrow-up-right me-1"></i><span data-i18n="client.voir_detail">Detail client</span>
-                        </a>
-                        <div id="platformCreditsSlot" class="ms-auto"></div>
-                    </div>
+                <div class="kpi-card">
+                    <div class="kpi-value" id="kpiChangements">0</div>
+                    <div class="kpi-label" data-i18n="kpi.changements">Problemes (7j)</div>
                 </div>
-            </div>
-
-            <!-- 1c. Tabs groupes d'URLs -->
-            <ul class="nav nav-tabs nav-tabs-groupes mb-0" id="tabsGroupes" role="tablist" style="display:none;">
-                <li class="nav-item" role="presentation">
-                    <button class="nav-link active" data-groupe-id="0" type="button" role="tab">
-                        <i class="bi bi-collection me-1"></i><span data-i18n="dashboard.toutes_urls">Toutes les URLs</span>
-                    </button>
-                </li>
-            </ul>
-
-            <!-- 1d. Table URLs du client selectionne -->
-            <div class="card mb-4 card-urls-dashboard" id="cardUrlsDashboard" style="display:none;">
-                <div class="card-body p-0">
-                    <div class="table-responsive">
-                        <table class="table table-hover mb-0 small table-theme" id="tableUrlsDashboard">
-                            <thead>
-                                <tr>
-                                    <th style="min-width:300px;">URL</th>
-                                    <th data-i18n="table.statut">Statut</th>
-                                    <th data-i18n="table.regles">Regles</th>
-                                    <th data-i18n="table.dernierStatut">Derniere verif.</th>
-                                    <th data-i18n="table.problemes">Problemes</th>
-                                    <th data-i18n="table.actions">Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody id="bodyUrlsDashboard">
-                                <tr id="urlsDashboardVide">
-                                    <td colspan="6" class="text-center text-muted py-4">
-                                        <i class="bi bi-arrow-up-circle d-block mb-1 fs-4"></i>
-                                        <span data-i18n="dashboard.choisir_client_invite">Selectionnez un client ci-dessus pour voir ses URLs.</span>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Etat vide (aucun client) -->
-            <div class="card mb-4" id="cardAucunClient" style="display:none;">
-                <div class="card-body text-center py-5">
-                    <i class="bi bi-inbox fs-1 text-muted d-block mb-2"></i>
-                    <p class="text-muted mb-3" data-i18n="dashboard.aucunClient">Aucun client configure.</p>
-                    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalClient">
-                        <i class="bi bi-plus-lg me-1"></i><span data-i18n="dashboard.ajouterClient">Ajouter un client</span>
-                    </button>
+                <div class="kpi-card">
+                    <div class="kpi-value" id="kpiProchaineAnalyse">--</div>
+                    <div class="kpi-label" data-i18n="kpi.prochaineAnalyse">Prochaine analyse</div>
                 </div>
             </div>
 
@@ -222,9 +198,6 @@
                 <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
                     <h6 class="mb-0 fw-bold"><i class="bi bi-graph-up me-2"></i><span data-i18n="dashboard.tendances">Tendances (30 jours)</span></h6>
                     <div class="d-flex gap-2 align-items-center">
-                        <select class="form-select form-select-sm" id="filtreTendancesClient" style="width:auto;">
-                            <option value="" data-i18n="dashboard.tous_clients">Tous les clients</option>
-                        </select>
                         <ul class="nav nav-pills nav-pills-sm" id="tabsTendances">
                             <li class="nav-item">
                                 <button class="nav-link active" data-graphique="taux" data-i18n="dashboard.taux_reussite">Taux de reussite</button>
@@ -246,6 +219,105 @@
             </div>
 
         </div><!-- /pane-dashboard -->
+
+        <!-- ============================================================== -->
+        <!-- ONGLET : URLs / Groupes                                        -->
+        <!-- ============================================================== -->
+        <div class="tab-pane fade" id="pane-urls" role="tabpanel" aria-labelledby="tab-urls">
+
+            <!-- Tabs groupes d'URLs -->
+            <ul class="nav nav-tabs nav-tabs-groupes mb-0" id="tabsGroupes" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" data-groupe-id="0" type="button" role="tab">
+                        <i class="bi bi-collection me-1"></i><span data-i18n="dashboard.toutes_urls">Toutes les URLs</span>
+                    </button>
+                </li>
+            </ul>
+
+            <!-- Table URLs -->
+            <div class="card mb-4 card-urls-dashboard" id="cardUrlsDashboard">
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0 small table-theme" id="tableUrlsDashboard">
+                            <thead>
+                                <tr>
+                                    <th style="min-width:300px;">URL</th>
+                                    <th data-i18n="table.statut">Statut</th>
+                                    <th data-i18n="table.regles">Regles</th>
+                                    <th data-i18n="table.dernierStatut">Derniere verif.</th>
+                                    <th data-i18n="table.problemes">Problemes</th>
+                                </tr>
+                            </thead>
+                            <tbody id="bodyUrlsDashboard">
+                                <tr id="urlsDashboardVide">
+                                    <td colspan="5" class="text-center text-muted py-4">
+                                        <i class="bi bi-hourglass-split"></i> Chargement...
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Gestion des groupes (accordion) -->
+            <div class="row">
+                <div class="col-lg-8">
+                    <div class="card mb-3">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h6 class="mb-0 fw-bold"><i class="bi bi-folder me-2"></i><span data-i18n="groupe.titre">Groupes d'URLs</span></h6>
+                            <div class="d-flex gap-2">
+                                <button type="button" class="btn btn-primary btn-sm" id="btnAjouterGroupeDashboard">
+                                    <i class="bi bi-plus-lg me-1"></i><span data-i18n="groupe.ajouter">Ajouter un groupe</span>
+                                </button>
+                                <button type="button" class="btn btn-outline-secondary btn-sm" id="btnImportSitemapDashboard">
+                                    <i class="bi bi-cloud-download me-1"></i>Sitemap
+                                </button>
+                            </div>
+                        </div>
+                        <div class="card-body p-0" id="accordionGroupes">
+                            <div class="text-center text-muted py-3" id="groupesVide">
+                                <i class="bi bi-folder d-block mb-1"></i> Aucun groupe. Ajoutez-en un.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-4">
+                    <!-- Card Planification -->
+                    <div class="card mb-3" id="cardPlanification">
+                        <div class="card-header">
+                            <h6 class="mb-0 fw-bold"><i class="bi bi-calendar-check me-2"></i><span data-i18n="planif.titre">Planification</span></h6>
+                        </div>
+                        <div class="card-body">
+                            <div id="blocPlanifExistante" style="display:none;">
+                                <p class="mb-1"><strong id="planifFrequenceLabel"></strong></p>
+                                <p class="small text-muted mb-2" id="planifProchaineLabel"></p>
+                                <div class="form-check form-switch mb-2">
+                                    <input class="form-check-input" type="checkbox" id="planifActifToggle">
+                                    <label class="form-check-label small" for="planifActifToggle" data-i18n="planif.actif">Actif</label>
+                                </div>
+                                <button type="button" class="btn btn-outline-danger btn-sm" id="btnSupprimerPlanif">
+                                    <i class="bi bi-trash me-1"></i><span data-i18n="actions.supprimer">Supprimer</span>
+                                </button>
+                            </div>
+                            <div id="blocPlanifCreer">
+                                <p class="text-muted small mb-2" data-i18n="planif.aucune">Aucune verification automatique configuree.</p>
+                                <select class="form-select form-select-sm mb-2" id="planifFrequence">
+                                    <option value="360">Toutes les 6h</option>
+                                    <option value="720">Toutes les 12h</option>
+                                    <option value="1440" selected>Quotidien</option>
+                                    <option value="10080">Hebdomadaire</option>
+                                </select>
+                                <button type="button" class="btn btn-primary btn-sm w-100" id="btnCreerPlanif">
+                                    <i class="bi bi-calendar-plus me-1"></i><span data-i18n="planif.activer">Activer</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div><!-- /pane-urls -->
 
         <!-- ============================================================== -->
         <!-- ONGLET : Modeles                                               -->
@@ -309,19 +381,14 @@
 
             <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
                 <h5 class="mb-0 fw-bold" data-i18n="executions.titre">Historique des executions</h5>
-                <div class="d-flex align-items-center gap-2">
-                    <select class="form-select form-select-sm" id="filtreExecutionStatut" style="width:auto;">
-                        <option value="" data-i18n="executions.tousStatuts">Tous les statuts</option>
-                        <option value="en_attente" data-i18n="executions.enAttente">En attente</option>
-                        <option value="en_cours" data-i18n="executions.enCours">En cours</option>
-                        <option value="termine" data-i18n="executions.terminee">Terminee</option>
-                        <option value="erreur" data-i18n="executions.echouee">Echouee</option>
-                        <option value="annule" data-i18n="executions.annulee">Annulee</option>
-                    </select>
-                    <select class="form-select form-select-sm" id="filtreExecutionClient" style="width:auto;">
-                        <option value="" data-i18n="executions.tousClients">Tous les clients</option>
-                    </select>
-                </div>
+                <select class="form-select form-select-sm" id="filtreExecutionStatut" style="width:auto;">
+                    <option value="" data-i18n="executions.tousStatuts">Tous les statuts</option>
+                    <option value="en_attente" data-i18n="executions.enAttente">En attente</option>
+                    <option value="en_cours" data-i18n="executions.enCours">En cours</option>
+                    <option value="termine" data-i18n="executions.terminee">Terminee</option>
+                    <option value="erreur" data-i18n="executions.echouee">Echouee</option>
+                    <option value="annule" data-i18n="executions.annulee">Annulee</option>
+                </select>
             </div>
 
             <div class="card">
@@ -331,7 +398,6 @@
                             <thead>
                                 <tr>
                                     <th class="sortable" data-sort="date" data-i18n="table.date">Date</th>
-                                    <th data-i18n="table.client">Client</th>
                                     <th data-i18n="table.statut">Statut</th>
                                     <th class="sortable" data-sort="urls" data-i18n="table.urls">URLs</th>
                                     <th data-i18n="table.succesEchecs">Succes / Echecs</th>
@@ -341,7 +407,7 @@
                             </thead>
                             <tbody id="bodyExecutions">
                                 <tr id="rowExecutionsVide">
-                                    <td colspan="7" class="text-center text-muted py-4">
+                                    <td colspan="6" class="text-center text-muted py-4">
                                         <i class="bi bi-clock-history fs-3 d-block mb-2"></i>
                                         <span data-i18n="executions.aucune">Aucune execution enregistree.</span>
                                     </td>
@@ -560,6 +626,7 @@
         </div><!-- /pane-indexation -->
 
     </div><!-- /tab-content -->
+    </div><!-- /blocClientScope -->
 
 </div><!-- /container -->
 
@@ -1063,7 +1130,7 @@
 </template>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-<?php $v = '1.5.0'; ?>
+<?php $v = '2.0.0'; ?>
 <script src="translations.js?v=<?=$v?>"></script>
 <script src="commun.js?v=<?=$v?>"></script>
 <script src="app.js?v=<?=$v?>"></script>
